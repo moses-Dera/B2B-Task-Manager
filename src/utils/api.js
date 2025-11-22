@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -46,6 +46,20 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
+  
+  getCurrentUser: () => apiRequest('/auth/me'),
+  
+  forgotPassword: (email) => 
+    apiRequest('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  
+  resetPassword: (token, password) => 
+    apiRequest('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
 };
 
 // Tasks API
@@ -54,6 +68,8 @@ export const tasksAPI = {
     const query = new URLSearchParams(params).toString();
     return apiRequest(`/tasks${query ? `?${query}` : ''}`);
   },
+  
+  getTask: (id) => apiRequest(`/tasks/${id}`),
   
   createTask: (taskData) => 
     apiRequest('/tasks', {
@@ -77,6 +93,8 @@ export const tasksAPI = {
       body: formData,
     });
   },
+  
+  getTaskFiles: (taskId) => apiRequest(`/tasks/${taskId}/files`),
 };
 
 // Users API
@@ -94,11 +112,19 @@ export const usersAPI = {
 export const teamAPI = {
   getEmployees: () => apiRequest('/team/employees'),
   getPerformance: () => apiRequest('/team/performance'),
+  assignTask: (taskData) => 
+    apiRequest('/team/assign-task', {
+      method: 'POST',
+      body: JSON.stringify(taskData),
+    }),
 };
 
 // Chat API
 export const chatAPI = {
-  getMessages: () => apiRequest('/chat/messages'),
+  getMessages: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/chat/messages${query ? `?${query}` : ''}`);
+  },
   
   sendMessage: (messageData) => 
     apiRequest('/chat/messages', {
@@ -114,6 +140,12 @@ export const notificationsAPI = {
   markAsRead: (id) => 
     apiRequest(`/notifications/${id}/read`, {
       method: 'PUT',
+    }),
+  
+  createNotification: (notificationData) => 
+    apiRequest('/notifications', {
+      method: 'POST',
+      body: JSON.stringify(notificationData),
     }),
 };
 
