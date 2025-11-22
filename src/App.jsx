@@ -10,6 +10,7 @@ import EmployeePerformance from './pages/EmployeePerformance';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 
@@ -17,6 +18,7 @@ function App() {
   const { user, login, logout, loading } = useAuth();
   const { isDark, setIsDark, theme } = useTheme();
   const [currentPath, setCurrentPath] = useState(user ? `/${user.role}` : '/');
+  const [showLanding, setShowLanding] = useState(!user);
 
   if (loading) {
     return (
@@ -30,7 +32,16 @@ function App() {
   }
 
   if (!user) {
-    return <Login onLogin={login} />;
+    if (showLanding) {
+      return (
+        <LandingPage 
+          onGetStarted={() => setShowLanding(false)}
+          isDark={isDark}
+          setIsDark={setIsDark}
+        />
+      );
+    }
+    return <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />;
   }
 
   const handleNavigation = (path) => {

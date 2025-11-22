@@ -3,7 +3,7 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 import SignUp from './SignUp';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onBackToLanding }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -41,6 +41,14 @@ export default function Login({ onLogin }) {
           </div>
           <h2 className="text-3xl font-bold text-gray-900">Sign in to TaskManager</h2>
           <p className="mt-2 text-gray-600">Employee Performance & Task Tracking</p>
+          {onBackToLanding && (
+            <button
+              onClick={onBackToLanding}
+              className="mt-2 text-sm text-primary hover:text-blue-700"
+            >
+              ← Back to Home
+            </button>
+          )}
         </div>
 
         <form className="space-y-6" onSubmit={handleLogin}>
