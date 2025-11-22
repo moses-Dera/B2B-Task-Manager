@@ -1,13 +1,20 @@
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, ChevronDown, Menu } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Header({ userRole = 'employee', userName = 'John Doe', onLogout, onNavigate }) {
+export default function Header({ userRole = 'employee', userName = 'John Doe', onLogout, onNavigate, onMobileMenuToggle }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex-1 max-w-md">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={onMobileMenuToggle}
+          className="lg:hidden p-2 text-gray-400 hover:text-gray-600 mr-2"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="flex-1 max-w-md lg:max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-300 w-4 h-4" />
             <input

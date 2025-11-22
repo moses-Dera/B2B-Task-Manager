@@ -65,7 +65,7 @@ export default function Settings({ isDark, setIsDark }) {
         <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your preferences and account settings</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -210,7 +210,7 @@ export default function Settings({ isDark, setIsDark }) {
         </Card>
       </div>
 
-      <div className="flex justify-end space-x-3">
+      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-3">
         <Button variant="outline" onClick={resetToDefaults}>Reset to Defaults</Button>
         <Button onClick={saveAllSettings}>Save All Settings</Button>
       </div>

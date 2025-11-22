@@ -66,7 +66,7 @@ export default function EmployeeDashboard({ onNavigate }) {
       {/* Focus Task */}
       <Card className="border-l-4 border-l-primary">
         <CardContent className="p-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
                 <Clock className="w-5 h-5 text-primary" />
@@ -82,7 +82,7 @@ export default function EmployeeDashboard({ onNavigate }) {
                 <Badge variant="error">{focusTask.priority} Priority</Badge>
               </div>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 w-full lg:w-auto">
               <Button 
                 size="lg" 
                 variant="outline"
@@ -105,9 +105,9 @@ export default function EmployeeDashboard({ onNavigate }) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
         {/* Task List */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 order-2 lg:order-1">
           <Card>
             <CardHeader>
               <div className="flex space-x-1 border-b border-gray-200 dark:border-gray-700">
@@ -203,7 +203,7 @@ export default function EmployeeDashboard({ onNavigate }) {
         </div>
 
         {/* Performance Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-4 lg:space-y-6 order-1 lg:order-2">
           <Card>
             <CardHeader>
               <CardTitle>My Performance</CardTitle>

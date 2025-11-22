@@ -31,12 +31,12 @@ export default function ManagerDashboard({ onNavigate }) {
 
   return (
     <div className="space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen p-6 -m-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Team Dashboard</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">Monitor team performance and assign tasks</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3">
           <Button 
             variant="outline"
             onClick={() => {
@@ -76,7 +76,7 @@ export default function ManagerDashboard({ onNavigate }) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8">
         {/* Task Status Distribution */}
         <Card>
           <CardHeader>
@@ -164,7 +164,7 @@ export default function ManagerDashboard({ onNavigate }) {
           <CardTitle>Quick Task Assignment</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Task Title</label>
               <input 

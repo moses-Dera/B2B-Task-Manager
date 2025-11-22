@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   BarChart3, Users, Settings, Bell, MessageSquare, 
-  CheckSquare, TrendingUp, Shield, Activity, FileText 
+  CheckSquare, TrendingUp, Shield, Activity, FileText, Menu, X 
 } from 'lucide-react';
 
 const roleMenus = {
@@ -27,18 +27,30 @@ const roleMenus = {
   ],
 };
 
-export default function Sidebar({ userRole = 'employee', currentPath = '/', onNavigate }) {
+export default function Sidebar({ userRole = 'employee', currentPath = '/', onNavigate, isMobileOpen, setIsMobileOpen }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const menuItems = roleMenus[userRole] || roleMenus.employee;
 
   return (
-    <div 
-      className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
-        isExpanded ? 'w-64' : 'w-16'
-      }`}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div 
+        className={`bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 fixed lg:relative z-50 h-full ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${
+          isExpanded ? 'w-64' : 'w-16 lg:w-16'
+        }`}
+        onMouseEnter={() => setIsExpanded(true)}
+        onMouseLeave={() => setIsExpanded(false)}
+      >
       <div className="p-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -73,6 +85,15 @@ export default function Sidebar({ userRole = 'employee', currentPath = '/', onNa
           );
         })}
       </nav>
+      
+      {/* Mobile Close Button */}
+      <button
+        onClick={() => setIsMobileOpen(false)}
+        className="lg:hidden absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600"
+      >
+        <X className="w-5 h-5" />
+      </button>
     </div>
+    </>
   );
 }
