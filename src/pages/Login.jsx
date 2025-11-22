@@ -2,30 +2,52 @@ import { useState } from 'react';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import Button from '../components/ui/Button';
 import SignUp from './SignUp';
+import { authAPI } from '../utils/api';
 
 export default function Login({ onLogin, onBackToLanding }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const demoUsers = [
-    { email: 'admin@company.com', password: 'admin123', role: 'admin', name: 'Admin User' },
-    { email: 'manager@company.com', password: 'manager123', role: 'manager', name: 'John Manager' },
-    { email: 'employee@company.com', password: 'employee123', role: 'employee', name: 'Jane Employee' },
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    const user = demoUsers.find(u => u.email === credentials.email && u.password === credentials.password);
-    if (user) {
-      onLogin(user);
-    } else {
-      alert('Invalid credentials');
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await authAPI.login(credentials);
+      if (response.success) {
+        // Store token and user data
+        localStorage.setItem('taskManagerUser', JSON.stringify({
+          token: response.token,
+          ...response.user
+        }));
+        onLogin(response.user);
+      } else {
+        setError(response.error || 'Login failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSignUp = (userData) => {
-    onLogin({ ...userData, password: 'temp123' });
+  const handleSignUp = async (userData) => {
+    try {
+      const response = await authAPI.signup(userData);
+      if (response.success) {
+        localStorage.setItem('taskManagerUser', JSON.stringify({
+          token: response.token,
+          ...response.user
+        }));
+        onLogin(response.user);
+      }
+    } catch (err) {
+      console.error('Signup failed:', err);
+    }
   };
 
   if (showSignUp) {
@@ -50,6 +72,12 @@ export default function Login({ onLogin, onBackToLanding }) {
             </button>
           )}
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
 
         <form className="space-y-6" onSubmit={handleLogin}>
           <div>
@@ -90,8 +118,8 @@ export default function Login({ onLogin, onBackToLanding }) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>
 

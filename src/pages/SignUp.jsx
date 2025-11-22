@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
 import Button from '../components/ui/Button';
+import { authAPI } from '../utils/api';
 
 export default function SignUp({ onSignUp, onSwitchToLogin }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,18 +15,39 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
     role: 'employee'
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
-    const newUser = {
-      name: formData.name,
-      email: formData.email,
-      role: formData.role
-    };
-    onSignUp(newUser);
+    
+    setLoading(true);
+    setError('');
+
+    try {
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role
+      };
+      
+      const response = await authAPI.signup(userData);
+      if (response.success) {
+        localStorage.setItem('taskManagerUser', JSON.stringify({
+          token: response.token,
+          ...response.user
+        }));
+        onSignUp(response.user);
+      } else {
+        setError(response.error || 'Signup failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +60,12 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
           <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
           <p className="mt-2 text-gray-600">Join TaskManager today</p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-800 text-sm">{error}</p>
+          </div>
+        )}
 
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div>
@@ -107,8 +137,8 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
 
