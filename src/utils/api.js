@@ -35,8 +35,15 @@ const apiRequest = async (endpoint, options = {}) => {
     ...options,
   };
 
+  // Add timeout for requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+  
+  config.signal = controller.signal;
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       let errorMessage = `HTTP error! status: ${response.status}`;
@@ -53,6 +60,10 @@ const apiRequest = async (endpoint, options = {}) => {
     
     return await response.json();
   } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please try again');
+    }
     console.error('API request failed:', error);
     throw error;
   }
