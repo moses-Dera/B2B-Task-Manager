@@ -11,6 +11,10 @@ export default function UserManagement() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('employee');
   const [inviting, setInviting] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const loadUsers = async () => {
     try {
@@ -51,6 +55,62 @@ export default function UserManagement() {
       alert('Failed to invite user: ' + error.message);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user.id);
+    setEditForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone || '',
+      department: user.department || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editForm.name || !editForm.email) {
+      alert('Name and email are required');
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      const response = await teamAPI.updateUser(editingUser, editForm);
+      if (response.success) {
+        alert('User updated successfully!');
+        setEditingUser(null);
+        await loadUsers();
+      } else {
+        alert('Failed to update user: ' + (response.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Edit error:', error);
+      alert('Failed to update user: ' + error.message);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!deleteConfirm || deleteConfirm !== userId) {
+      setDeleteConfirm(userId);
+      return;
+    }
+
+    try {
+      const response = await teamAPI.deleteUser(userId);
+      if (response.success) {
+        alert('User deleted successfully!');
+        setDeleteConfirm(null);
+        await loadUsers();
+      } else {
+        alert('Failed to delete user: ' + (response.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete user: ' + error.message);
     }
   };
 
@@ -201,10 +261,18 @@ export default function UserManagement() {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
-                        <button className="p-2 text-gray-400 hover:text-blue-600">
+                        <button 
+                          onClick={() => handleEditUser(user)}
+                          className="p-2 text-gray-400 hover:text-blue-600 transition"
+                          title="Edit user"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-gray-400 hover:text-red-600">
+                        <button 
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition"
+                          title={deleteConfirm === user.id ? "Click again to confirm delete" : "Delete user"}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -216,6 +284,92 @@ export default function UserManagement() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Edit User</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  value={editForm.role}
+                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="employee">Employee</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+              <div className="flex gap-3 justify-end pt-4">
+                <button
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={editLoading}
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                >
+                  {editLoading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

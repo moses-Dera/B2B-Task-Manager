@@ -158,6 +158,15 @@ export const teamAPI = {
       method: 'POST',
       body: JSON.stringify({ email, role }),
     }),
+  updateUser: (userId, userData) =>
+    apiRequest(`/team/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    }),
+  deleteUser: (userId) =>
+    apiRequest(`/team/users/${userId}`, {
+      method: 'DELETE',
+    }),
 };
 
 // Chat API
