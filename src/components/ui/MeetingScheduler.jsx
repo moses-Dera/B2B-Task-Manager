@@ -18,7 +18,7 @@ export default function MeetingScheduler({ employees = [], onClose }) {
     const endDate = new Date(startDate.getTime() + parseInt(meetingData.duration) * 60000);
     
     const attendeeEmails = meetingData.type === 'team' 
-      ? employees.map(emp => `${emp.name.toLowerCase().replace(' ', '.')}@company.com`).join(',')
+      ? employees.map(emp => emp.email).join(',')
       : meetingData.attendees.join(',');
 
     const googleMeetUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(meetingData.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent('Google Meet: https://meet.google.com/new')}&add=${attendeeEmails}`;
@@ -43,7 +43,7 @@ export default function MeetingScheduler({ employees = [], onClose }) {
               type="text"
               value={meetingData.title}
               onChange={(e) => setMeetingData({...meetingData, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               placeholder="Team standup meeting"
             />
           </div>
@@ -55,7 +55,7 @@ export default function MeetingScheduler({ employees = [], onClose }) {
                 type="date"
                 value={meetingData.date}
                 onChange={(e) => setMeetingData({...meetingData, date: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               />
             </div>
             <div>
@@ -64,7 +64,7 @@ export default function MeetingScheduler({ employees = [], onClose }) {
                 type="time"
                 value={meetingData.time}
                 onChange={(e) => setMeetingData({...meetingData, time: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               />
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function MeetingScheduler({ employees = [], onClose }) {
             <select
               value={meetingData.duration}
               onChange={(e) => setMeetingData({...meetingData, duration: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
             >
               <option value="15">15 minutes</option>
               <option value="30">30 minutes</option>
@@ -112,11 +112,11 @@ export default function MeetingScheduler({ employees = [], onClose }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Select Employee</label>
               <select
                 onChange={(e) => setMeetingData({...meetingData, attendees: [e.target.value]})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               >
                 <option value="">Choose employee</option>
                 {employees.map(emp => (
-                  <option key={emp.name} value={`${emp.name.toLowerCase().replace(' ', '.')}@company.com`}>
+                  <option key={emp.id || emp._id} value={emp.email}>
                     {emp.name}
                   </option>
                 ))}

@@ -317,7 +317,7 @@ export default function ManagerDashboard({ onNavigate }) {
                 type="text" 
                 value={taskForm.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
                 placeholder="Enter task title"
                 required
               />
@@ -327,7 +327,7 @@ export default function ManagerDashboard({ onNavigate }) {
               <select 
                 value={taskForm.assigned_to}
                 onChange={(e) => handleInputChange('assigned_to', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
                 required
               >
                 <option value="">Select employee</option>
@@ -341,7 +341,7 @@ export default function ManagerDashboard({ onNavigate }) {
               <select 
                 value={taskForm.priority}
                 onChange={(e) => handleInputChange('priority', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -354,7 +354,7 @@ export default function ManagerDashboard({ onNavigate }) {
                 rows={3}
                 value={taskForm.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
                 placeholder="Task description"
               />
             </div>
@@ -364,7 +364,7 @@ export default function ManagerDashboard({ onNavigate }) {
                 type="date" 
                 value={taskForm.due_date}
                 onChange={(e) => handleInputChange('due_date', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
               />
             </div>
             <div className="flex items-end">
