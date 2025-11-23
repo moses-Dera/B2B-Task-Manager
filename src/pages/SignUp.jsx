@@ -12,7 +12,8 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'employee'
+    role: 'employee',
+    company: ''
   });
 
   const handleSubmit = async (e) => {
@@ -30,7 +31,8 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role
+        role: formData.role,
+        company: formData.company
       };
       
       const response = await authAPI.signup(userData);
@@ -85,6 +87,18 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
               onChange={(e) => setFormData({...formData, email: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Company</label>
+            <input
+              type="text"
+              value={formData.company}
+              onChange={(e) => setFormData({...formData, company: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Enter your company name"
               required
             />
           </div>

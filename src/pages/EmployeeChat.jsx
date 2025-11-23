@@ -2,28 +2,50 @@ import { useState, useEffect } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { chatAPI } from '../utils/api';
+import { chatAPI, authAPI } from '../utils/api';
 
 export default function EmployeeChat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    const loadMessages = async () => {
+    const loadData = async () => {
+      try {
+        const [messagesResponse, userResponse] = await Promise.all([
+          chatAPI.getMessages(),
+          authAPI.getCurrentUser()
+        ]);
+        
+        if (messagesResponse.success) {
+          setMessages(messagesResponse.data || []);
+        }
+        if (userResponse.success) {
+          setCurrentUser(userResponse.user);
+        }
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+    
+    // Poll for new messages every 3 seconds
+    const interval = setInterval(async () => {
       try {
         const response = await chatAPI.getMessages();
         if (response.success) {
           setMessages(response.data || []);
         }
       } catch (error) {
-        console.error('Failed to load messages:', error);
-      } finally {
-        setLoading(false);
+        console.error('Failed to refresh messages:', error);
       }
-    };
+    }, 3000);
 
-    loadMessages();
+    return () => clearInterval(interval);
   }, []);
 
   const sendMessage = async () => {
@@ -31,8 +53,7 @@ export default function EmployeeChat() {
 
     try {
       const response = await chatAPI.sendMessage({
-        message: newMessage,
-        timestamp: new Date().toISOString()
+        message: newMessage
       });
       
       if (response.success) {
@@ -75,16 +96,24 @@ export default function EmployeeChat() {
           ) : (
             <>
               <div className="space-y-4 mb-4 h-96 overflow-y-auto">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'You' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs px-4 py-2 rounded-lg ${
-                      msg.sender === 'You' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'
-                    }`}>
-                      <p className="text-sm">{msg.message}</p>
-                      <p className="text-xs opacity-75 mt-1">{msg.time}</p>
+                {messages.map((msg) => {
+                  const isOwnMessage = currentUser && msg.sender_id._id === currentUser.id;
+                  return (
+                    <div key={msg._id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                        isOwnMessage ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'
+                      }`}>
+                        {!isOwnMessage && (
+                          <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
+                        )}
+                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-xs opacity-75 mt-1">
+                          {new Date(msg.createdAt).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="flex space-x-2">
                 <input

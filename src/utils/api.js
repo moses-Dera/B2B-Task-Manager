@@ -133,6 +133,11 @@ export const teamAPI = {
       method: 'POST',
       body: JSON.stringify(taskData),
     }),
+  inviteUser: (email, role = 'employee') => 
+    apiRequest('/team/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email, role }),
+    }),
 };
 
 // Chat API

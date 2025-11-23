@@ -8,6 +8,9 @@ import { teamAPI } from '../utils/api';
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('employee');
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -22,6 +25,28 @@ export default function UserManagement() {
         setLoading(false);
       }
     };
+
+  const handleInviteUser = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    
+    setInviting(true);
+    try {
+      const response = await teamAPI.inviteUser(inviteEmail, inviteRole);
+      if (response.success) {
+        alert('User invited successfully!');
+        setInviteEmail('');
+        setInviteRole('employee');
+        loadUsers();
+      } else {
+        alert('Failed to invite user: ' + response.error);
+      }
+    } catch (error) {
+      alert('Failed to invite user: ' + error.message);
+    } finally {
+      setInviting(false);
+    }
+  };
 
     loadUsers();
   }, []);
@@ -53,10 +78,28 @@ export default function UserManagement() {
           <h1 className="text-2xl font-semibold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage system users and their permissions</p>
         </div>
-        <Button>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        <form onSubmit={handleInviteUser} className="flex items-center space-x-2">
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="Enter email to invite"
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            required
+          />
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+          >
+            <option value="employee">Employee</option>
+            <option value="manager">Manager</option>
+          </select>
+          <Button type="submit" disabled={inviting}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            {inviting ? 'Inviting...' : 'Invite User'}
+          </Button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

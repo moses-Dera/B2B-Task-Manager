@@ -12,6 +12,24 @@ export default function EmployeeDashboard({ onNavigate }) {
   const [focusTask, setFocusTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ completed: 0, streak: 0, completionRate: 0 });
+  const [updating, setUpdating] = useState(null);
+
+  const handleMarkComplete = async (taskId) => {
+    setUpdating(taskId);
+    try {
+      const response = await tasksAPI.updateTask(taskId, { status: 'completed' });
+      if (response.success) {
+        // Reload tasks to reflect changes
+        window.location.reload();
+      } else {
+        alert('Failed to update task: ' + response.error);
+      }
+    } catch (error) {
+      alert('Failed to update task: ' + error.message);
+    } finally {
+      setUpdating(null);
+    }
+  };
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -181,9 +199,13 @@ export default function EmployeeDashboard({ onNavigate }) {
                 <CalendarPlus className="w-5 h-5 mr-2" />
                 Add to Calendar
               </Button>
-              <Button size="lg">
+              <Button 
+                size="lg"
+                onClick={() => focusTask && handleMarkComplete(focusTask._id)}
+                disabled={!focusTask || updating === focusTask._id}
+              >
                 <CheckCircle className="w-5 h-5 mr-2" />
-                Mark Complete
+                {updating === focusTask?._id ? 'Updating...' : 'Mark Complete'}
               </Button>
             </div>
           </div>
@@ -229,7 +251,8 @@ export default function EmployeeDashboard({ onNavigate }) {
                             <input
                               type="checkbox"
                               checked={task.status === 'completed'}
-                              onChange={() => {}}
+                              onChange={() => task.status !== 'completed' && handleMarkComplete(task._id)}
+                              disabled={updating === task._id}
                               className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                             />
                             <div>
