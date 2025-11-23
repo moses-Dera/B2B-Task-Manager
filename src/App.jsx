@@ -51,7 +51,7 @@ function App() {
     
     switch (user.role) {
       case 'admin':
-        if (currentPath === '/admin/users') return <UserManagement />;
+        if (currentPath === '/admin/users' || currentPath === '/user-management') return <UserManagement />;
         if (currentPath === '/admin/roles') return <AccessRoles />;
         if (currentPath === '/admin/logs') return <ApplicationLogs />;
         if (currentPath === '/admin/settings') return <GlobalSettings />;
@@ -60,7 +60,7 @@ function App() {
         if (currentPath === '/manager/chat') return <ManagerChat />;
         if (currentPath === '/manager/performance') return <TeamPerformance />;
         if (currentPath === '/manager/tasks') return <AssignTasks />;
-        if (currentPath === '/user-management') return <UserManagement />;
+        if (currentPath === '/user-management' || currentPath === '/manager/users') return <UserManagement />;
         return <ManagerDashboard onNavigate={handleNavigation} />;
       case 'employee':
       default:

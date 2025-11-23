@@ -178,14 +178,26 @@ export default function UserManagement() {
                       </Badge>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-sm font-medium text-gray-900">
-                        {user.performance_score}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm font-bold px-2 py-1 rounded bg-blue-100 text-blue-800">
+                          {user.performance_score}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {user.performance_label}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="text-sm text-gray-600">
-                        {user.tasks_completed}/{user.tasks_assigned}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900">
+                          {user.tasks_completed}/{user.tasks_assigned}
+                        </span>
+                        {user.tasks_assigned > 0 && (
+                          <span className="text-xs text-gray-500">
+                            {user.completion_rate}% complete
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">

@@ -142,7 +142,14 @@ export default function ManagerDashboard({ onNavigate }) {
         <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3">
           <Button 
             variant="primary"
-            onClick={() => onNavigate && onNavigate('/user-management')}
+            onClick={() => {
+              console.log('Add Employee clicked, onNavigate available:', !!onNavigate);
+              if (onNavigate) {
+                onNavigate('/user-management');
+              } else {
+                alert('Navigation not available');
+              }
+            }}
           >
             <Users className="w-4 h-4 mr-2" />
             Add Employee

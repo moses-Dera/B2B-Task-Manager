@@ -14,6 +14,7 @@ const roleMenus = {
   ],
   manager: [
     { icon: BarChart3, label: 'Team Dashboard', path: '/manager' },
+    { icon: Users, label: 'Employees', path: '/user-management' },
     { icon: CheckSquare, label: 'Assign Tasks', path: '/manager/tasks' },
     { icon: TrendingUp, label: 'Team Performance', path: '/manager/performance' },
     { icon: MessageSquare, label: 'Chat', path: '/manager/chat' },
