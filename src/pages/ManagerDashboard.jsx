@@ -149,7 +149,7 @@ export default function ManagerDashboard({ onNavigate }) {
               if (onNavigate) {
                 onNavigate('/user-management');
               } else {
-                alert('Navigation not available');
+                error('Navigation not available');
               }
             }}
           >
@@ -162,7 +162,7 @@ export default function ManagerDashboard({ onNavigate }) {
               const meetUrl = `https://meet.google.com/new`;
               window.open(meetUrl, '_blank');
               // In real app, would send notifications to all employees
-              alert('Meeting started! Link shared with all team members.');
+              success('Meeting started! Link shared with all team members.');
             }}
           >
             <Video className="w-4 h-4 mr-2" />

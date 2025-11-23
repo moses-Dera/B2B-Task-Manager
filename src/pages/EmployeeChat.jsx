@@ -3,9 +3,11 @@ import { Send, MessageSquare } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI, getAuthToken } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 // import io from 'socket.io-client'; // Install: npm install socket.io-client
 
 export default function EmployeeChat() {
+  const { error } = useNotification();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -78,9 +80,9 @@ export default function EmployeeChat() {
         setMessages(prev => [...prev, response.data]);
       }
       setNewMessage('');
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      alert('Failed to send message: ' + error.message);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      error('Failed to send message: ' + err.message);
     }
   };
 

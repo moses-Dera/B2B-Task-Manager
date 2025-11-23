@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Settings, Save, Mail, Shield, Database, Bell } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useNotification } from '../hooks/useNotification';
 
 export default function GlobalSettings() {
+  const { success } = useNotification();
   const [settings, setSettings] = useState({
     // System Settings
     systemName: 'TaskFlow',
@@ -38,7 +40,7 @@ export default function GlobalSettings() {
 
   const handleSave = () => {
     // In a real app, this would save to backend
-    alert('Settings saved successfully!');
+    success('Settings saved successfully!');
   };
 
   return (

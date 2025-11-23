@@ -4,8 +4,10 @@ import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card'
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { teamAPI, tasksAPI } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 export default function AssignTasks() {
+  const { success, error } = useNotification();
   const [employees, setEmployees] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function AssignTasks() {
   const handleTaskSubmit = async (e) => {
     e.preventDefault();
     if (!taskForm.title || !taskForm.assigned_to) {
-      alert('Please fill in title and assign to an employee');
+      error('Please fill in title and assign to an employee');
       return;
     }
 
@@ -53,7 +55,7 @@ export default function AssignTasks() {
     try {
       const response = await tasksAPI.createTask(taskForm);
       if (response.success) {
-        alert('Task assigned successfully!');
+        success('Task assigned successfully!');
         setTaskForm({
           title: '',
           assigned_to: '',
@@ -67,10 +69,10 @@ export default function AssignTasks() {
           setTasks(tasksResponse.data);
         }
       } else {
-        alert('Failed to assign task: ' + (response.error || 'Unknown error'));
+        error('Failed to assign task: ' + (response.error || 'Unknown error'));
       }
-    } catch (error) {
-      alert('Failed to assign task: ' + error.message);
+    } catch (err) {
+      error('Failed to assign task: ' + err.message);
     } finally {
       setSubmitting(false);
     }

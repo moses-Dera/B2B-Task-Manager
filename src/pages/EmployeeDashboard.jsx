@@ -5,8 +5,10 @@ import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { CircularProgress } from '../components/charts/ProgressBar';
 import { tasksAPI, authAPI } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 export default function EmployeeDashboard({ onNavigate }) {
+  const { success, error } = useNotification();
   const [activeTab, setActiveTab] = useState('today');
   const [tasks, setTasks] = useState({ today: [], week: [], later: [] });
   const [focusTask, setFocusTask] = useState(null);
@@ -20,13 +22,14 @@ export default function EmployeeDashboard({ onNavigate }) {
     try {
       const response = await tasksAPI.updateTask(taskId, { status: 'completed' });
       if (response.success) {
+        success('Task marked as completed!');
         // Reload tasks to reflect changes
         window.location.reload();
       } else {
-        alert('Failed to update task: ' + response.error);
+        error('Failed to update task: ' + response.error);
       }
-    } catch (error) {
-      alert('Failed to update task: ' + error.message);
+    } catch (err) {
+      error('Failed to update task: ' + err.message);
     } finally {
       setUpdating(null);
     }
