@@ -39,7 +39,16 @@ const apiRequest = async (endpoint, options = {}) => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (e) {
+        // If response is not JSON, use default message
+      }
+      throw new Error(errorMessage);
     }
     
     return await response.json();
@@ -182,6 +191,15 @@ export const logsAPI = {
 export const systemAPI = {
   getSystemMetrics: () => apiRequest('/system/metrics'),
   getActivityLogs: () => apiRequest('/system/activity-logs'),
+};
+
+// Fix user API
+export const fixUserAPI = {
+  fixUser: (company = 'MyCompany') => 
+    apiRequest('/fix/fix-user', {
+      method: 'POST',
+      body: JSON.stringify({ company }),
+    }),
 };
 
 // Export auth utilities
