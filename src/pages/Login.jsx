@@ -149,15 +149,6 @@ export default function Login({ onLogin, onBackToLanding }) {
             </button>
           </p>
         </div>
-
-        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h3 className="font-medium text-blue-900 dark:text-blue-200 mb-2">Demo Accounts:</h3>
-          <div className="space-y-1 text-sm text-blue-800 dark:text-blue-300">
-            <div><strong>Admin:</strong> admin@company.com / admin123</div>
-            <div><strong>Manager:</strong> manager@company.com / manager123</div>
-            <div><strong>Employee:</strong> employee@company.com / employee123</div>
-          </div>
-        </div>
       </div>
     </div>
   );
