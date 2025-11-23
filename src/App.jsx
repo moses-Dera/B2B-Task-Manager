@@ -74,55 +74,58 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className={isDark ? 'dark' : ''} style={{ backgroundColor: theme.background, color: theme.color, minHeight: '100vh' }}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={
-            !user ? (
-              showLanding ? (
-                <LandingPage 
-                  onGetStarted={() => setShowLanding(false)}
-                  isDark={isDark}
-                  setIsDark={setIsDark}
-                />
+    <NotificationProvider>
+      <Router>
+        <div className={isDark ? 'dark' : ''} style={{ backgroundColor: theme.background, color: theme.color, minHeight: '100vh' }}>
+          <NotificationContainer />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={
+              !user ? (
+                showLanding ? (
+                  <LandingPage 
+                    onGetStarted={() => setShowLanding(false)}
+                    isDark={isDark}
+                    setIsDark={setIsDark}
+                  />
+                ) : (
+                  <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+                )
               ) : (
-                <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+                <Navigate to={`/${user.role}`} replace />
               )
-            ) : (
-              <Navigate to={`/${user.role}`} replace />
-            )
-          } />
-          <Route path="/login" element={
-            !user ? (
-              <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
-            ) : (
-              <Navigate to={`/${user.role}`} replace />
-            )
-          } />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Protected routes */}
-          <Route path="/*" element={
-            user ? (
-              <Layout 
-                userRole={user.role} 
-                userName={user.name}
-                currentPath={currentPath}
-                onNavigate={handleNavigation}
-                onLogout={logout}
-                theme={theme}
-              >
-                {renderDashboard()}
-              </Layout>
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } />
-        </Routes>
-      </div>
-    </Router>
+            } />
+            <Route path="/login" element={
+              !user ? (
+                <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+              ) : (
+                <Navigate to={`/${user.role}`} replace />
+              )
+            } />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            
+            {/* Protected routes */}
+            <Route path="/*" element={
+              user ? (
+                <Layout 
+                  userRole={user.role} 
+                  userName={user.name}
+                  currentPath={currentPath}
+                  onNavigate={handleNavigation}
+                  onLogout={logout}
+                  theme={theme}
+                >
+                  {renderDashboard()}
+                </Layout>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } />
+          </Routes>
+        </div>
+      </Router>
+    </NotificationProvider>
   );
 }
 

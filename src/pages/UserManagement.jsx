@@ -4,8 +4,10 @@ import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card'
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import { teamAPI } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 export default function UserManagement() {
+  const { success, error } = useNotification();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -31,7 +33,7 @@ export default function UserManagement() {
 
   const handleInviteUser = async () => {
     if (!inviteEmail) {
-      alert('Please enter an email address');
+      error('Please enter an email address');
       return;
     }
     
@@ -43,16 +45,16 @@ export default function UserManagement() {
       console.log('Invite response:', response);
       
       if (response.success) {
-        alert('User invited successfully!');
+        success('User invited successfully!');
         setInviteEmail('');
         setInviteRole('employee');
         await loadUsers();
       } else {
-        alert('Failed to invite user: ' + (response.error || 'Unknown error'));
+        error('Failed to invite user: ' + (response.error || 'Unknown error'));
       }
-    } catch (error) {
-      console.error('Invite error:', error);
-      alert('Failed to invite user: ' + error.message);
+    } catch (err) {
+      console.error('Invite error:', err);
+      error('Failed to invite user: ' + err.message);
     } finally {
       setInviting(false);
     }
@@ -71,7 +73,7 @@ export default function UserManagement() {
 
   const handleSaveEdit = async () => {
     if (!editForm.name || !editForm.email) {
-      alert('Name and email are required');
+      error('Name and email are required');
       return;
     }
 
@@ -79,15 +81,15 @@ export default function UserManagement() {
     try {
       const response = await teamAPI.updateUser(editingUser, editForm);
       if (response.success) {
-        alert('User updated successfully!');
+        success('User updated successfully!');
         setEditingUser(null);
         await loadUsers();
       } else {
-        alert('Failed to update user: ' + (response.error || 'Unknown error'));
+        error('Failed to update user: ' + (response.error || 'Unknown error'));
       }
-    } catch (error) {
-      console.error('Edit error:', error);
-      alert('Failed to update user: ' + error.message);
+    } catch (err) {
+      console.error('Edit error:', err);
+      error('Failed to update user: ' + err.message);
     } finally {
       setEditLoading(false);
     }
@@ -102,15 +104,15 @@ export default function UserManagement() {
     try {
       const response = await teamAPI.deleteUser(userId);
       if (response.success) {
-        alert('User deleted successfully!');
+        success('User deleted successfully!');
         setDeleteConfirm(null);
         await loadUsers();
       } else {
-        alert('Failed to delete user: ' + (response.error || 'Unknown error'));
+        error('Failed to delete user: ' + (response.error || 'Unknown error'));
       }
-    } catch (error) {
-      console.error('Delete error:', error);
-      alert('Failed to delete user: ' + error.message);
+    } catch (err) {
+      console.error('Delete error:', err);
+      error('Failed to delete user: ' + err.message);
     }
   };
 

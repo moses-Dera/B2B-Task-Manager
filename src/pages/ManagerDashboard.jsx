@@ -7,8 +7,10 @@ import DonutChart from '../components/charts/DonutChart';
 import SimpleLineChart from '../components/charts/LineChart';
 import MeetingScheduler from '../components/ui/MeetingScheduler';
 import { teamAPI, tasksAPI, authAPI } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 export default function ManagerDashboard({ onNavigate }) {
+  const { success, error } = useNotification();
   const [showMeetingScheduler, setShowMeetingScheduler] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [performance, setPerformance] = useState(null);
@@ -82,7 +84,7 @@ export default function ManagerDashboard({ onNavigate }) {
   const handleTaskSubmit = async (e) => {
     e.preventDefault();
     if (!taskForm.title || !taskForm.assigned_to) {
-      alert('Please fill in title and assign to an employee');
+      error('Please fill in title and assign to an employee');
       return;
     }
 
@@ -90,7 +92,7 @@ export default function ManagerDashboard({ onNavigate }) {
     try {
       const response = await tasksAPI.createTask(taskForm);
       if (response.success) {
-        alert('Task assigned successfully!');
+        success('Task assigned successfully!');
         setTaskForm({
           title: '',
           assigned_to: '',
@@ -101,10 +103,10 @@ export default function ManagerDashboard({ onNavigate }) {
         // Reload team data to update stats
         window.location.reload();
       } else {
-        alert('Failed to assign task: ' + (response.error || 'Unknown error'));
+        error('Failed to assign task: ' + (response.error || 'Unknown error'));
       }
-    } catch (error) {
-      alert('Failed to assign task: ' + error.message);
+    } catch (err) {
+      error('Failed to assign task: ' + err.message);
     } finally {
       setSubmitting(false);
     }

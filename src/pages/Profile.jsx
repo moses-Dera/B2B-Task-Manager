@@ -3,8 +3,10 @@ import { User, Mail, Phone, MapPin, Calendar, Camera } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { usersAPI, authAPI } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 export default function Profile({ user: initialUser }) {
+  const { success, error } = useNotification();
   const [user, setUser] = useState(initialUser);
   const [formData, setFormData] = useState({
     name: '',
@@ -56,12 +58,12 @@ export default function Profile({ user: initialUser }) {
       const response = await usersAPI.updateProfile(formData);
       if (response.success) {
         setUser(response.user);
-        alert('Profile updated successfully!');
+        success('Profile updated successfully!');
       } else {
-        alert('Failed to update profile: ' + response.error);
+        error('Failed to update profile: ' + response.error);
       }
-    } catch (error) {
-      alert('Failed to update profile: ' + error.message);
+    } catch (err) {
+      error('Failed to update profile: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -72,23 +74,23 @@ export default function Profile({ user: initialUser }) {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+      error('File size must be less than 5MB');
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      error('Please select an image file');
       return;
     }
 
     setUploading(true);
     try {
       setTimeout(() => {
-        alert('Photo uploaded successfully!');
+        success('Photo uploaded successfully!');
         setUploading(false);
       }, 1000);
-    } catch (error) {
-      alert('Failed to upload photo: ' + error.message);
+    } catch (err) {
+      error('Failed to upload photo: ' + err.message);
       setUploading(false);
     }
   };
