@@ -57,7 +57,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
           
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setIsDark(!isDark)}
+              onClick={() => setIsDark(isDark ? 'light' : 'dark')}
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
             >
               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}

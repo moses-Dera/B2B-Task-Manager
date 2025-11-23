@@ -5,13 +5,22 @@ export function useTheme() {
   const [currentTheme, setCurrentTheme] = useState('light');
 
   const applyTheme = (theme) => {
+    let darkMode;
     if (theme === 'system') {
-      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDark(systemDark);
+      darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     } else {
-      setIsDark(theme === 'dark');
+      darkMode = theme === 'dark';
     }
+    
+    setIsDark(darkMode);
     setCurrentTheme(theme);
+    
+    // Apply dark class to document element
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   useEffect(() => {
