@@ -32,7 +32,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
       role: 'Project Manager',
       company: 'TechCorp',
       rating: 5,
-      text: 'TaskManager transformed how our team collaborates. Productivity increased by 40%!'
+      text: 'TaskFlow transformed how our team collaborates. Productivity increased by 40%!'
     },
     {
       name: 'Mike Chen',
@@ -52,7 +52,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">TaskManager</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">TaskFlow</span>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -169,7 +169,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             Ready to Transform Your Team?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of teams already using TaskManager to boost productivity
+            Join thousands of teams already using TaskFlow to boost productivity
           </p>
           <Button onClick={onGetStarted} variant="outline" size="lg" className="bg-white text-primary hover:bg-gray-50 text-lg px-8 py-4">
             Start Your Free Trial
@@ -185,10 +185,10 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">TaskManager</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">TaskFlow</span>
           </div>
           <p className="text-gray-600 dark:text-gray-300">
-            © 2024 TaskManager. All rights reserved.
+            © 2024 TaskFlow. All rights reserved.
           </p>
         </div>
       </footer>

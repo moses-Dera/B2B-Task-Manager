@@ -53,6 +53,7 @@ export default function ManagerDashboard({ onNavigate }) {
         const performanceResponse = await teamAPI.getPerformance();
         if (performanceResponse.success) {
           const perf = performanceResponse.data;
+          console.log('Performance data received:', perf);
           setPerformance(perf);
           
           // Set task status data with fallbacks
@@ -169,23 +170,28 @@ export default function ManagerDashboard({ onNavigate }) {
             variant="outline"
             onClick={async () => {
               try {
-                const meetUrl = 'https://meet.google.com/new';
-                window.open(meetUrl, '_blank');
+                const now = new Date();
+                const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour meeting
+                
+                // Create Google Calendar event with all team members
+                const attendeeEmails = employees.map(emp => emp.email).join(',');
+                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Team Meeting')}&dates=${now.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent('Team meeting with Google Meet video call')}&add=${attendeeEmails}&conf=1`;
+                
+                window.open(calendarUrl, '_blank');
                 
                 // Send meeting notification to all employees
                 const meetingData = {
                   title: 'Team Meeting',
                   description: `Meeting started by ${user?.name || 'Manager'}`,
-                  meeting_url: meetUrl,
-                  started_at: new Date().toISOString()
+                  meeting_url: 'Google Calendar event created',
+                  started_at: now.toISOString()
                 };
                 
-                // Send meeting notification to all employees
                 await teamAPI.notifyTeamMeeting(meetingData);
                 
-                success('Meeting started! All team members have been notified via email.');
+                success('Calendar event created! All team members will receive invitations.');
               } catch (error) {
-                error('Failed to start meeting');
+                error('Failed to create meeting');
               }
             }}
           >
@@ -227,6 +233,11 @@ export default function ManagerDashboard({ onNavigate }) {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div className="bg-green-500 h-2 rounded-full" style={{ width: `${performance?.completion_rate || 0}%` }}></div>
             </div>
+            {performance && (
+              <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                {performance.completed_tasks} of {performance.total_tasks} tasks completed
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -292,8 +303,10 @@ export default function ManagerDashboard({ onNavigate }) {
                   <Badge variant="primary">{employee.performance_score}</Badge>
                   <button 
                     onClick={() => {
-                      const meetUrl = `https://meet.google.com/new`;
-                      window.open(meetUrl, '_blank');
+                      const now = new Date();
+                      const endTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 min meeting
+                      const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`1-on-1 with ${employee.name}`)}&dates=${now.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent('1-on-1 meeting with Google Meet')}&add=${employee.email}&conf=1`;
+                      window.open(calendarUrl, '_blank');
                     }}
                     className="p-2 text-gray-400 hover:text-primary"
                     title="Start 1-on-1 meeting"
