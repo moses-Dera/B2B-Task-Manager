@@ -149,7 +149,7 @@ export default function UserManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+      <div className="flex flex-col lg:flex-col lg:justify-between lg:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white">User Management</h1>
           <p className="text-gray-600 dark:text-gray-300 mt-1">Manage system users and their permissions</p>
