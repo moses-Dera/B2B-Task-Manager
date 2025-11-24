@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, UserPlus, Moon, Sun } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { authAPI, setAuthToken } from '../utils/api';
@@ -6,6 +7,7 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function SignUp({ onSignUp, onSwitchToLogin }) {
   const { isDark, setIsDark } = useTheme();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +30,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
       setError('Passwords do not match');
       return;
     }
-    
+
     setLoading(true);
     setError('');
 
@@ -40,9 +42,10 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
         role: formData.role,
         company: formData.company
       };
-      
+
       await onSignUp(userData);
       // If we reach here, signup was successful and user should be logged in
+      navigate(`/${formData.role}`);
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
     } finally {
@@ -81,7 +84,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Enter your full name"
               required
@@ -93,7 +96,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Enter your email"
               required
@@ -105,7 +108,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             <input
               type="text"
               value={formData.company}
-              onChange={(e) => setFormData({...formData, company: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Enter your company name"
               required
@@ -116,7 +119,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({...formData, role: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="employee">Employee</option>
@@ -130,7 +133,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full px-3 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Create a password"
                 required
@@ -150,7 +153,7 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
             <input
               type="password"
               value={formData.confirmPassword}
-              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Confirm your password"
               required
