@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, Moon, Sun } from 'lucide-react';
 import Button from '../components/ui/Button';
 import SignUp from './SignUp';
@@ -8,7 +7,6 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function Login({ onLogin, onBackToLanding }) {
   const { isDark, setIsDark } = useTheme();
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -30,12 +28,11 @@ export default function Login({ onLogin, onBackToLanding }) {
         // Store only token
         setAuthToken(response.token);
         onLogin(response.user);
-        navigate(`/${response.user.role}`);
       } else {
         setError(response.error || 'Login failed');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -47,7 +44,6 @@ export default function Login({ onLogin, onBackToLanding }) {
       if (response.success) {
         setAuthToken(response.token);
         onLogin(response.user);
-        navigate(`/${response.user.role}`);
         return response; // Return success response
       } else {
         setError(response.error || 'Signup failed');

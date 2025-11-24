@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, UserPlus, Moon, Sun } from 'lucide-react';
 import Button from '../components/ui/Button';
 import { authAPI, setAuthToken } from '../utils/api';
@@ -7,7 +6,6 @@ import { useTheme } from '../hooks/useTheme';
 
 export default function SignUp({ onSignUp, onSwitchToLogin }) {
   const { isDark, setIsDark } = useTheme();
-  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,7 +43,6 @@ export default function SignUp({ onSignUp, onSwitchToLogin }) {
 
       await onSignUp(userData);
       // If we reach here, signup was successful and user should be logged in
-      navigate(`/${formData.role}`);
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');
     } finally {
