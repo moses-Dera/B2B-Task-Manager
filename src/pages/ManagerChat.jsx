@@ -23,7 +23,7 @@ export default function ManagerChat() {
           chatAPI.getMessages(),
           authAPI.getCurrentUser()
         ]);
-        
+
         if (messagesResponse.success) {
           setMessages(messagesResponse.data || []);
         }
@@ -38,11 +38,12 @@ export default function ManagerChat() {
     };
 
     loadData();
-    
+
     // Initialize WebSocket connection (disabled until socket.io-client is installed)
     // const token = getAuthToken();
     // if (token) {
-    //   socketRef.current = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://task-manger-backend-z2yz.onrender.com', {
+    //   const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+    //   socketRef.current = io(baseUrl, {
     //     auth: { token }
     //   });
     //   
@@ -65,7 +66,7 @@ export default function ManagerChat() {
       }
     };
   }, []);
-  
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -123,9 +124,8 @@ export default function ManagerChat() {
                   const isOwnMessage = currentUser && msg.sender_id._id === currentUser.id;
                   return (
                     <div key={msg._id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs px-4 py-2 rounded-lg ${
-                        isOwnMessage ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'
-                      }`}>
+                      <div className={`max-w-xs px-4 py-2 rounded-lg ${isOwnMessage ? 'bg-primary text-white' : 'bg-gray-100 text-gray-900'
+                        }`}>
                         {!isOwnMessage && (
                           <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
                         )}

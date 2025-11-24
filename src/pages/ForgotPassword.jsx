@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { authAPI } from '../utils/api';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
@@ -16,15 +17,7 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      const response = await fetch('https://task-manger-backend-z2yz.onrender.com/api/auth/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
+      const data = await authAPI.forgotPassword(email);
 
       if (data.success) {
         setMessage('Password reset email sent! Check your inbox.');
@@ -32,7 +25,7 @@ const ForgotPassword = () => {
         setError(data.error || 'Failed to send reset email');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }

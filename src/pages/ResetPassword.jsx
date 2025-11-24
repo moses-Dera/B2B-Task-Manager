@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { authAPI } from '../utils/api';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
@@ -22,7 +23,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -38,15 +39,7 @@ const ResetPassword = () => {
     setMessage('');
 
     try {
-      const response = await fetch('https://task-manger-backend-z2yz.onrender.com/api/auth/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, password }),
-      });
-
-      const data = await response.json();
+      const data = await authAPI.resetPassword(token, password);
 
       if (data.success) {
         setMessage('Password reset successful! Redirecting to login...');
@@ -57,7 +50,7 @@ const ResetPassword = () => {
         setError(data.error || 'Failed to reset password');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.message || 'Network error. Please try again.');
     } finally {
       setLoading(false);
     }
