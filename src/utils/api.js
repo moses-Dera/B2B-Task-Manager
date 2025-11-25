@@ -254,13 +254,18 @@ export const teamAPI = {
 export const chatAPI = {
   getTeamMembers: () => apiRequest('/team/employees'),
 
-  getMessages: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiRequest(`/chat/messages${query ? `?${query}` : ''}`);
-  },
+  // Group chat endpoints
+  getGroupMessages: () => apiRequest('/chat/group/messages'),
+  sendGroupMessage: (messageData) =>
+    apiRequest('/chat/group/messages', {
+      method: 'POST',
+      body: JSON.stringify(messageData),
+    }),
 
-  sendMessage: (messageData) =>
-    apiRequest('/chat/messages', {
+  // Direct message endpoints
+  getDirectMessages: (recipientId) => apiRequest(`/chat/direct/${recipientId}/messages`),
+  sendDirectMessage: (recipientId, messageData) =>
+    apiRequest(`/chat/direct/${recipientId}/messages`, {
       method: 'POST',
       body: JSON.stringify(messageData),
     }),

@@ -44,27 +44,18 @@ export default function EmployeeChat() {
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const params = selectedUser ? { recipient_id: selectedUser._id, type: 'direct' } : { type: 'group' };
-        const messagesResponse = await chatAPI.getMessages(params);
+        let messagesResponse;
+        
+        if (selectedUser) {
+          // Load direct messages
+          messagesResponse = await chatAPI.getDirectMessages(selectedUser._id);
+        } else {
+          // Load group messages
+          messagesResponse = await chatAPI.getGroupMessages();
+        }
 
         if (messagesResponse.success) {
-          let filteredMessages = messagesResponse.data || [];
-          
-          // Frontend filtering as fallback
-          if (selectedUser) {
-            // Direct messages: filter by recipient_id
-            filteredMessages = filteredMessages.filter(msg => 
-              (msg.recipient_id && msg.recipient_id._id === selectedUser._id) ||
-              (msg.sender_id._id === selectedUser._id && msg.recipient_id && msg.recipient_id._id === currentUser?.id)
-            );
-          } else {
-            // Group messages: no recipient_id or type is group
-            filteredMessages = filteredMessages.filter(msg => 
-              !msg.recipient_id || msg.type === 'group'
-            );
-          }
-          
-          setMessages(filteredMessages);
+          setMessages(messagesResponse.data || []);
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -84,13 +75,16 @@ export default function EmployeeChat() {
     if (!newMessage.trim()) return;
 
     try {
-      const messageData = {
-        message: newMessage,
-        type: selectedUser ? 'direct' : 'group',
-        ...(selectedUser && { recipient_id: selectedUser._id })
-      };
-
-      const response = await chatAPI.sendMessage(messageData);
+      let response;
+      
+      if (selectedUser) {
+        // Send direct message
+        response = await chatAPI.sendDirectMessage(selectedUser._id, { message: newMessage });
+      } else {
+        // Send group message
+        response = await chatAPI.sendGroupMessage({ message: newMessage });
+      }
+      
       if (response.success) {
         setMessages(prev => [...prev, response.data]);
       }
