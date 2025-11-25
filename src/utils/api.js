@@ -252,7 +252,7 @@ export const teamAPI = {
 
 // Chat API
 export const chatAPI = {
-  // getTeamMembers: () => apiRequest('/chat/team-members'), // Endpoint may not exist
+  getTeamMembers: () => apiRequest('/team/employees'),
 
   getMessages: (params = {}) => {
     const query = new URLSearchParams(params).toString();
@@ -272,6 +272,11 @@ export const notificationsAPI = {
 
   markAsRead: (id) =>
     apiRequest(`/notifications/${id}/read`, {
+      method: 'PUT',
+    }),
+
+  markAllAsRead: () =>
+    apiRequest('/notifications/mark-all-read', {
       method: 'PUT',
     }),
 

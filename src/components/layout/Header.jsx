@@ -55,6 +55,24 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
     }
   };
 
+  const markAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      // Fallback to individual marking if bulk endpoint fails
+      try {
+        const unreadNotifications = notifications.filter(n => !n.read);
+        await Promise.all(unreadNotifications.map(n => notificationsAPI.markAsRead(n.id)));
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+      } catch (fallbackError) {
+        console.error('Failed to mark all notifications as read:', fallbackError);
+      }
+    }
+  };
+
   return (
     <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
@@ -84,8 +102,8 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1 animate-pulse">
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
             </button>
@@ -95,12 +113,22 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
-                    <button 
-                      onClick={() => setShowNotifications(false)}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={markAllAsRead}
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => setShowNotifications(false)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="max-h-96 overflow-y-auto">

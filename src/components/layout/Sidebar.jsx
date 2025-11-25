@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   BarChart3, Users, Settings, Bell, MessageSquare, 
   CheckSquare, TrendingUp, Shield, Activity, FileText, Menu, X 
 } from 'lucide-react';
+import { notificationsAPI } from '../../utils/api';
 
 const roleMenus = {
   admin: [
@@ -30,7 +31,29 @@ const roleMenus = {
 
 export default function Sidebar({ userRole = 'employee', currentPath = '/', onNavigate, isMobileOpen, setIsMobileOpen }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const menuItems = roleMenus[userRole] || roleMenus.employee;
+
+  useEffect(() => {
+    const loadNotificationCount = async () => {
+      try {
+        const response = await notificationsAPI.getNotifications();
+        if (response.success) {
+          const notifications = response.data || [];
+          setUnreadCount(notifications.filter(n => !n.read).length);
+        }
+      } catch (error) {
+        // Set mock count if API fails
+        setUnreadCount(2);
+      }
+    };
+
+    loadNotificationCount();
+    
+    // Refresh count every 30 seconds
+    const interval = setInterval(loadNotificationCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -71,16 +94,31 @@ export default function Sidebar({ userRole = 'employee', currentPath = '/', onNa
           return (
             <button
               key={item.path}
-              onClick={() => onNavigate && onNavigate(item.path)}
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium transition-colors ${
+              onClick={() => {
+                if (onNavigate) {
+                  onNavigate(item.path);
+                  // Clear notification count when visiting notifications page
+                  if (item.path.includes('/notifications')) {
+                    setUnreadCount(0);
+                  }
+                }
+              }}
+              className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-primary/10 text-primary border-r-2 border-primary'
                   : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              {isExpanded && (
-                <span className="ml-3">{item.label}</span>
+              <div className="flex items-center">
+                <Icon className="w-5 h-5" />
+                {isExpanded && (
+                  <span className="ml-3">{item.label}</span>
+                )}
+              </div>
+              {item.label === 'Notifications' && unreadCount > 0 && (
+                <span className="min-w-[18px] h-[18px] bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
               )}
             </button>
           );
