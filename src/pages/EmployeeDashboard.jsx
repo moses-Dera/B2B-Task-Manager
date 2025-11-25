@@ -304,7 +304,7 @@ export default function EmployeeDashboard({ onNavigate }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {tasks[activeTab].map((task) => (
+                {tasks[activeTab] && tasks[activeTab].length > 0 ? tasks[activeTab].map((task) => (
                   <div
                     key={task._id || task.id}
                     className={`p-4 rounded-lg border transition-colors ${getRowColor(task)}`}

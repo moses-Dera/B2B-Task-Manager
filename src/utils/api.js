@@ -1,29 +1,46 @@
-const API_BASE_URL = 'https://task-manger-backend-z2yz.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://task-manger-backend-z2yz.onrender.com/api';
 
 // Auth utilities - only store token, fetch user data from API
-const TOKEN_KEY = 'taskflow_token';
+const TOKEN_KEY = import.meta.env.VITE_TOKEN_KEY || 'taskflow_token';
+const REQUEST_TIMEOUT = import.meta.env.VITE_REQUEST_TIMEOUT || 15000;
+const RETRY_DELAY = import.meta.env.VITE_RETRY_DELAY || 1000;
 
 const getAuthToken = () => {
   return localStorage.getItem(TOKEN_KEY);
 };
 
 const setAuthToken = (token) => {
+  // Validate and sanitize token to prevent XSS
+  if (!token || typeof token !== 'string') {
+    throw new Error('Invalid token format');
+  }
+  
+  // Basic token format validation (JWT tokens should match this pattern)
+  const tokenPattern = /^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/;
+  if (!tokenPattern.test(token)) {
+    throw new Error('Invalid token format');
+  }
+  
   localStorage.setItem(TOKEN_KEY, token);
 };
 
 const clearAuthToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
-  // Clear all old data
-  localStorage.removeItem('taskManagerUser');
-  localStorage.removeItem('taskflow_auth');
-  localStorage.removeItem('user');
-  localStorage.removeItem('token');
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('currentUser');
+  // Define all possible token keys for cleanup
+  const tokenKeys = [
+    TOKEN_KEY,
+    'taskManagerUser',
+    'taskflow_auth', 
+    'user',
+    'token',
+    'authToken',
+    'currentUser'
+  ];
+  
+  tokenKeys.forEach(key => localStorage.removeItem(key));
 };
 
-// API request helper
-const apiRequest = async (endpoint, options = {}) => {
+// API request helper with retry logic
+const apiRequest = async (endpoint, options = {}, retries = 1) => {
   const token = getAuthToken();
 
   const config = {
@@ -37,14 +54,33 @@ const apiRequest = async (endpoint, options = {}) => {
 
   // Add timeout for requests
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
   config.signal = controller.signal;
 
-  // Normalize URL to prevent double slashes
-  const baseUrl = API_BASE_URL.replace(/\/+$/, ''); // Remove trailing slashes
-  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const fullUrl = `${baseUrl}${normalizedEndpoint}`;
+  // Validate and normalize URL to prevent SSRF attacks
+  let fullUrl;
+  try {
+    const baseUrl = API_BASE_URL.replace(/\/+$/, ''); // Remove trailing slashes
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    
+    // Validate base URL is from allowed domain
+    const allowedDomains = ['task-manger-backend-z2yz.onrender.com', 'localhost'];
+    const baseUrlObj = new URL(baseUrl);
+    if (!allowedDomains.includes(baseUrlObj.hostname)) {
+      throw new Error('Invalid API domain');
+    }
+    
+    fullUrl = `${baseUrl}${normalizedEndpoint}`;
+    
+    // Final URL validation
+    const finalUrlObj = new URL(fullUrl);
+    if (!allowedDomains.includes(finalUrlObj.hostname)) {
+      throw new Error('Invalid request URL');
+    }
+  } catch (urlError) {
+    throw new Error('Invalid URL format or unauthorized domain');
+  }
 
   try {
     const response = await fetch(fullUrl, config);
@@ -56,10 +92,21 @@ const apiRequest = async (endpoint, options = {}) => {
         const errorData = await response.json();
         if (errorData.error) {
           errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
         }
       } catch (e) {
-        // If response is not JSON, use default message
+        // If response is not JSON, use status text
+        errorMessage = response.statusText || errorMessage;
       }
+      
+      // Retry on server errors (5xx) but not client errors (4xx)
+      if (response.status >= 500 && retries > 0) {
+        console.warn(`Retrying request to ${endpoint}, attempts left: ${retries}`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+        return apiRequest(endpoint, options, retries - 1);
+      }
+      
       throw new Error(errorMessage);
     }
 
@@ -69,6 +116,14 @@ const apiRequest = async (endpoint, options = {}) => {
     if (error.name === 'AbortError') {
       throw new Error('Request timeout - please try again');
     }
+    
+    // Retry on network errors
+    if (retries > 0 && (error.name === 'TypeError' || error.message.includes('fetch'))) {
+      console.warn(`Retrying request to ${endpoint} due to network error, attempts left: ${retries}`);
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+      return apiRequest(endpoint, options, retries - 1);
+    }
+    
     console.error('API request failed:', error);
     throw error;
   }
@@ -149,6 +204,20 @@ export const usersAPI = {
       method: 'PUT',
       body: JSON.stringify(profileData),
     }),
+
+  getSettings: () => apiRequest('/users/settings'),
+
+  updateSettings: (settingsData) =>
+    apiRequest('/users/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settingsData),
+    }),
+
+  changePassword: (passwordData) =>
+    apiRequest('/users/change-password', {
+      method: 'PUT',
+      body: JSON.stringify(passwordData),
+    }),
 };
 
 // Team API (Manager/Admin only)
@@ -227,46 +296,10 @@ export const systemAPI = {
   getActivityLogs: () => apiRequest('/system/activity-logs'),
 };
 
-// Fix user API
-export const fixUserAPI = {
-  fixUser: (company = 'MyCompany') =>
-    apiRequest('/fix/fix-user', {
-      method: 'POST',
-      body: JSON.stringify({ company }),
-    }),
-};
 
-// Settings API
-export const settingsAPI = {
-  updateSettings: (settingsData) =>
-    apiRequest('/users/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settingsData),
-    }),
 
-  getSettings: () => apiRequest('/users/settings'),
 
-  changePassword: (passwordData) =>
-    apiRequest('/users/change-password', {
-      method: 'PUT',
-      body: JSON.stringify(passwordData),
-    }),
-};
 
 // Export auth utilities
 export { getAuthToken, setAuthToken, clearAuthToken };
 
-// Example usage in components:
-/*
-import { tasksAPI, getAuthData } from '../utils/api';
-
-// In your component
-const loadTasks = async () => {
-  try {
-    const tasks = await tasksAPI.getTasks({ status: 'pending' });
-    setTasks(tasks);
-  } catch (error) {
-    console.error('Failed to load tasks:', error);
-  }
-};
-*/
