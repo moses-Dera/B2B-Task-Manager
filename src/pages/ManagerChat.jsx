@@ -44,18 +44,23 @@ export default function ManagerChat() {
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        let messagesResponse;
+        const messagesResponse = await chatAPI.getMessages();
         
-        if (selectedUser) {
-          // Load direct messages
-          messagesResponse = await chatAPI.getDirectMessages(selectedUser._id);
-        } else {
-          // Load group messages
-          messagesResponse = await chatAPI.getGroupMessages();
-        }
-
         if (messagesResponse.success) {
-          setMessages(messagesResponse.data || []);
+          let filteredMessages = messagesResponse.data || [];
+          
+          if (selectedUser) {
+            // Direct messages only
+            filteredMessages = filteredMessages.filter(msg => 
+              msg.recipient_id === selectedUser._id || 
+              (msg.sender_id._id === selectedUser._id && msg.recipient_id === currentUser?.id)
+            );
+          } else {
+            // Group messages only (no recipient_id)
+            filteredMessages = filteredMessages.filter(msg => !msg.recipient_id);
+          }
+          
+          setMessages(filteredMessages);
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -75,16 +80,12 @@ export default function ManagerChat() {
     if (!newMessage.trim()) return;
 
     try {
-      let response;
-      
-      if (selectedUser) {
-        // Send direct message
-        response = await chatAPI.sendDirectMessage(selectedUser._id, { message: newMessage });
-      } else {
-        // Send group message
-        response = await chatAPI.sendGroupMessage({ message: newMessage });
-      }
-      
+      const messageData = {
+        message: newMessage,
+        ...(selectedUser && { recipient_id: selectedUser._id })
+      };
+
+      const response = await chatAPI.sendMessage(messageData);
       if (response.success) {
         setMessages(prev => [...prev, response.data]);
       }
