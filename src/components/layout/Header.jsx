@@ -12,7 +12,10 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
 
   useEffect(() => {
     loadNotifications();
-    
+
+    // Refresh notifications every 30 seconds
+    const interval = setInterval(loadNotifications, 30000);
+
     const handleClickOutside = (event) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
@@ -21,9 +24,12 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
         setShowProfileMenu(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      clearInterval(interval);
+    };
   }, []);
 
   const loadNotifications = async () => {
@@ -35,20 +41,14 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
         setUnreadCount(notifs.filter(n => !n.read).length);
       }
     } catch (error) {
-      // Mock notifications if API fails
-      const mockNotifications = [
-        { id: 1, title: 'New Task Assigned', message: 'You have been assigned a new task', read: false, createdAt: new Date().toISOString() },
-        { id: 2, title: 'Task Completed', message: 'Your task has been marked as completed', read: true, createdAt: new Date(Date.now() - 3600000).toISOString() }
-      ];
-      setNotifications(mockNotifications);
-      setUnreadCount(1);
+      console.error('Failed to load notifications:', error);
     }
   };
 
   const markAsRead = async (id) => {
     try {
       await notificationsAPI.markAsRead(id);
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => (n._id || n.id) === id ? { ...n, read: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
@@ -61,15 +61,7 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      // Fallback to individual marking if bulk endpoint fails
-      try {
-        const unreadNotifications = notifications.filter(n => !n.read);
-        await Promise.all(unreadNotifications.map(n => notificationsAPI.markAsRead(n.id)));
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        setUnreadCount(0);
-      } catch (fallbackError) {
-        console.error('Failed to mark all notifications as read:', fallbackError);
-      }
+      console.error('Failed to mark all notifications as read:', error);
     }
   };
 
@@ -96,7 +88,7 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
 
         <div className="flex items-center space-x-4">
           <div className="relative" ref={notificationRef}>
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-gray-400 dark:text-gray-300 hover:text-gray-600 dark:hover:text-white"
             >
@@ -115,14 +107,14 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
                     <div className="flex items-center space-x-2">
                       {unreadCount > 0 && (
-                        <button 
+                        <button
                           onClick={markAllAsRead}
                           className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20"
                         >
                           Mark all read
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => setShowNotifications(false)}
                         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                       >
@@ -137,37 +129,39 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                       No notifications
                     </div>
                   ) : (
-                    notifications.map((notification) => (
-                      <div 
-                        key={notification.id}
-                        className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                          !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                        }`}
-                        onClick={() => !notification.read && markAsRead(notification.id)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              {notification.title}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                              {notification.message}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                              {new Date(notification.createdAt).toLocaleString()}
-                            </p>
+                    notifications.map((notification) => {
+                      const notifId = notification._id || notification.id;
+                      return (
+                        <div
+                          key={notifId}
+                          className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                            }`}
+                          onClick={() => !notification.read && markAsRead(notifId)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                {notification.title}
+                              </p>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                {notification.message}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                {new Date(notification.createdAt).toLocaleString()}
+                              </p>
+                            </div>
+                            {!notification.read && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
+                            )}
                           </div>
-                          {!notification.read && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>
-                          )}
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
                 {notifications.length > 0 && (
                   <div className="p-3 border-t border-gray-200 dark:border-gray-700">
-                    <button 
+                    <button
                       onClick={() => onNavigate && onNavigate('/employee/notifications')}
                       className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                     >
@@ -198,20 +192,20 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
 
             {showProfileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                <button 
+                <button
                   onClick={() => onNavigate && onNavigate('/profile')}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   My Profile
                 </button>
-                <button 
+                <button
                   onClick={() => onNavigate && onNavigate('/settings')}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Settings
                 </button>
                 <hr className="my-1 border-gray-200 dark:border-gray-600" />
-                <button 
+                <button
                   onClick={onLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
