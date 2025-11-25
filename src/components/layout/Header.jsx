@@ -162,7 +162,12 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                 {notifications.length > 0 && (
                   <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                     <button
-                      onClick={() => onNavigate && onNavigate('/employee/notifications')}
+                      onClick={() => {
+                        setShowNotifications(false);
+                        onNavigate && onNavigate('/employee/notifications');
+                        // Refresh after a short delay to allow page to load
+                        setTimeout(loadNotifications, 1000);
+                      }}
                       className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                     >
                       View all notifications
