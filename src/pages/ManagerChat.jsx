@@ -597,6 +597,52 @@ export default function ManagerChat() {
                           )}
                           <p className="text-sm whitespace-pre-wrap break-words overflow-wrap-anywhere">{msg.message}</p>
 
+                          {/* File Attachments */}
+                          {msg.attachments && msg.attachments.length > 0 && (
+                            <div className="mt-2 space-y-2">
+                              {msg.attachments.map((file, idx) => {
+                                const isImage = file.mimeType?.startsWith('image/');
+                                const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${file.url}`;
+
+                                return (
+                                  <div key={idx} className="bg-white/10 dark:bg-black/10 rounded-lg p-2">
+                                    {isImage ? (
+                                      <div className="relative group/img">
+                                        <img
+                                          src={fileUrl}
+                                          alt={file.originalName}
+                                          className="max-w-full max-h-48 rounded cursor-pointer hover:opacity-90 transition-opacity"
+                                          onClick={() => window.open(fileUrl, '_blank')}
+                                        />
+                                        <a
+                                          href={fileUrl}
+                                          download={file.originalName}
+                                          className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity"
+                                          title="Download"
+                                        >
+                                          <Download className="w-4 h-4" />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <a
+                                        href={fileUrl}
+                                        download={file.originalName}
+                                        className="flex items-center gap-2 hover:bg-white/10 dark:hover:bg-black/10 p-1 rounded transition-colors"
+                                      >
+                                        <File className="w-5 h-5 flex-shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium truncate">{file.originalName}</p>
+                                          <p className="text-xs opacity-60">{(file.size / 1024).toFixed(1)} KB</p>
+                                        </div>
+                                        <Download className="w-4 h-4 flex-shrink-0" />
+                                      </a>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
                           <div className="flex items-center justify-between mt-1">
                             <p className="text-xs opacity-75">
                               {formatTimestamp(msg.createdAt)}
