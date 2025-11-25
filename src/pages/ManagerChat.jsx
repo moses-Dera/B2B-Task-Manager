@@ -249,7 +249,7 @@ export default function ManagerChat() {
               </button>
 
               {/* Individual Users */}
-              {filteredTeamMembers.map((member) => (
+              {filteredTeamMembers.filter(member => member != null).map((member) => (
                 <button
                   key={member._id}
                   onClick={() => setSelectedUser(member)}
@@ -300,7 +300,7 @@ export default function ManagerChat() {
                   </div>
                 </div>
               ) : (
-                messages.map((msg) => {
+                messages.filter(msg => msg != null && msg.sender_id != null).map((msg) => {
                   const isOwnMessage = currentUser && msg.sender_id._id === currentUser.id;
                   const isGroupChat = !selectedUser;
                   return (
