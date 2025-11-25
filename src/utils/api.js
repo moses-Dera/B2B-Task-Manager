@@ -316,6 +316,22 @@ export const chatAPI = {
     const params = recipientId ? new URLSearchParams({ recipient_id: recipientId }) : '';
     return apiRequest(`/chat/messages/pinned${params ? `?${params}` : ''}`);
   },
+
+  uploadAttachment: (files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+
+    const token = getAuthToken();
+    return fetch(`${API_BASE_URL.replace(/\/+$/, '')}/chat/upload-attachment`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    }).then(res => res.json());
+  },
 };
 
 // Notifications API

@@ -28,6 +28,7 @@ export default function EmployeeChat() {
   const [replyingTo, setReplyingTo] = useState(null);
   const [pinnedMessages, setPinnedMessages] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -231,7 +232,7 @@ export default function EmployeeChat() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() && !editingMessage) return;
+    if (!newMessage.trim() && selectedFiles.length === 0 && !editingMessage) return;
 
     try {
       if (editingMessage) {
@@ -245,10 +246,24 @@ export default function EmployeeChat() {
           success('Message updated');
         }
       } else {
+        let attachments = [];
+
+        // Upload files if any
+        if (selectedFiles.length > 0) {
+          const uploadResponse = await chatAPI.uploadAttachment(selectedFiles);
+          if (uploadResponse.success) {
+            attachments = uploadResponse.data;
+          } else {
+            error('Failed to upload files');
+            return;
+          }
+        }
+
         const messageData = {
-          message: newMessage,
+          message: newMessage || '📎 Attachment',
           ...(selectedUser && { recipient_id: selectedUser._id }),
-          ...(replyingTo && { replyTo: replyingTo._id })
+          ...(replyingTo && { replyTo: replyingTo._id }),
+          ...(attachments.length > 0 && { attachments })
         };
 
         const response = await chatAPI.sendMessage(messageData);
@@ -258,11 +273,12 @@ export default function EmployeeChat() {
           if (socket) {
             socket.emit('send_message', {
               recipientId: selectedUser?._id,
-              message: newMessage
+              message: newMessage || '📎 Attachment'
             });
           }
         }
         setNewMessage('');
+        setSelectedFiles([]);
         setReplyingTo(null);
       }
 
@@ -710,9 +726,8 @@ export default function EmployeeChat() {
                   onChange={(e) => {
                     const files = Array.from(e.target.files);
                     if (files.length > 0) {
-                      const fileNames = files.map(f => f.name).join(', ');
-                      success(`Files selected: ${fileNames}. (Note: File upload backend integration pending)`);
-                      // TODO: Implement actual file upload to server
+                      setSelectedFiles(files);
+                      success(`${files.length} file(s) selected`);
                     }
                   }}
                 />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Paperclip } from 'lucide-react';
+import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Paperclip, File, Download, Image as ImageIcon } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
@@ -28,6 +28,7 @@ export default function ManagerChat() {
   const [replyingTo, setReplyingTo] = useState(null);
   const [pinnedMessages, setPinnedMessages] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -233,7 +234,7 @@ export default function ManagerChat() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() && !editingMessage) return;
+    if (!newMessage.trim() && selectedFiles.length === 0 && !editingMessage) return;
 
     try {
       if (editingMessage) {
@@ -248,11 +249,25 @@ export default function ManagerChat() {
           success('Message updated');
         }
       } else {
+        let attachments = [];
+
+        // Upload files if any
+        if (selectedFiles.length > 0) {
+          const uploadResponse = await chatAPI.uploadAttachment(selectedFiles);
+          if (uploadResponse.success) {
+            attachments = uploadResponse.data;
+          } else {
+            error('Failed to upload files');
+            return;
+          }
+        }
+
         // Send new message
         const messageData = {
-          message: newMessage,
+          message: newMessage || '📎 Attachment',
           ...(selectedUser && { recipient_id: selectedUser._id }),
-          ...(replyingTo && { replyTo: replyingTo._id })
+          ...(replyingTo && { replyTo: replyingTo._id }),
+          ...(attachments.length > 0 && { attachments })
         };
 
         const response = await chatAPI.sendMessage(messageData);
@@ -262,11 +277,13 @@ export default function ManagerChat() {
           if (socket) {
             socket.emit('send_message', {
               recipientId: selectedUser?._id,
-              message: newMessage
+              message: newMessage || '📎 Attachment'
             });
           }
         }
         setNewMessage('');
+        setSelectedFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setReplyingTo(null);
       }
 
@@ -450,8 +467,8 @@ export default function ManagerChat() {
               {/* Group Chat Option */}
               <button
                 onClick={() => setSelectedUser(null)}
-                className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${!selectedUser ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : ''
-                  }`}
+                className={`w - full px - 4 py - 3 flex items - center space - x - 3 hover: bg - gray - 50 dark: hover: bg - gray - 700 transition - colors border - b border - gray - 100 dark: border - gray - 700 ${!selectedUser ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : ''
+                  } `}
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <Users className="w-5 h-5 text-white" />
@@ -472,8 +489,8 @@ export default function ManagerChat() {
                 <button
                   key={member._id}
                   onClick={() => setSelectedUser(member)}
-                  className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${selectedUser?._id === member._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : ''
-                    }`}
+                  className={`w - full px - 4 py - 3 flex items - center space - x - 3 hover: bg - gray - 50 dark: hover: bg - gray - 700 transition - colors border - b border - gray - 100 dark: border - gray - 700 ${selectedUser?._id === member._id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-primary' : ''
+                    } `}
                 >
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
@@ -571,10 +588,10 @@ export default function ManagerChat() {
                           </div>
                         )}
 
-                        <div className={`px-4 py-2 rounded-lg shadow-sm break-words ${isOwnMessage
+                        <div className={`px - 4 py - 2 rounded - lg shadow - sm break-words ${isOwnMessage
                           ? (isGroupChat ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white' : 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white')
                           : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-emerald-100 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100')
-                          }`}>
+                          } `}>
                           {!isOwnMessage && (
                             <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
                           )}
@@ -748,10 +765,8 @@ export default function ManagerChat() {
                   onChange={(e) => {
                     const files = Array.from(e.target.files);
                     if (files.length > 0) {
-                      // For now, just show file names in the message
-                      const fileNames = files.map(f => f.name).join(', ');
-                      success(`Files selected: ${fileNames}. (Note: File upload backend integration pending)`);
-                      // TODO: Implement actual file upload to server
+                      setSelectedFiles(files);
+                      success(`${files.length} file(s) selected`);
                     }
                   }}
                 />
