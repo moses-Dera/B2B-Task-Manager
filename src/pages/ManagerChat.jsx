@@ -86,9 +86,9 @@ export default function ManagerChat() {
 
       if (!selectedUser && !data.message.recipient_id) {
         setMessages(prev => [...prev, data.message]);
-      } else if (selectedUser && (
+      } else if (selectedUser && data.message.sender_id && (
         data.message.sender_id._id === selectedUser._id ||
-        data.message.recipient_id?._id === selectedUser._id
+        (data.message.recipient_id && data.message.recipient_id._id === selectedUser._id)
       )) {
         setMessages(prev => [...prev, data.message]);
       }
