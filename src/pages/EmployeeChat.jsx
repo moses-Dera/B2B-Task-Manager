@@ -68,11 +68,13 @@ export default function EmployeeChat() {
         if (messagesResponse.success) {
           setMessages(messagesResponse.data || []);
 
-          // Mark messages as read
+          // Mark messages as read and clear unread count
           if (selectedUser) {
             await chatAPI.markAllAsRead(selectedUser._id);
+            setUnreadCounts(prev => ({ ...prev, [selectedUser._id]: 0 }));
           } else {
             await chatAPI.markAllAsRead();
+            setUnreadCounts(prev => ({ ...prev, 'group': 0 }));
           }
         }
 
@@ -123,13 +125,16 @@ export default function EmployeeChat() {
       if (isRelevant) {
         setMessages(prev => [...prev, data.message]);
 
-        // Mark as read if conversation is open
+        // Mark as read if conversation is open and not own message
         if (data.message.sender_id._id !== currentUser.id) {
           chatAPI.markAsRead(data.message._id).catch(console.error);
         }
       } else {
-        // Update unread count
-        loadUnreadCounts();
+        // Update unread count for other conversations
+        const senderId = data.message.sender_id._id;
+        const isGroupMsg = !data.message.recipient_id;
+        const countKey = isGroupMsg ? 'group' : senderId;
+        setUnreadCounts(prev => ({ ...prev, [countKey]: (prev[countKey] || 0) + 1 }));
       }
     };
 
@@ -543,8 +548,8 @@ export default function EmployeeChat() {
                         )}
 
                         <div className={`px-4 py-2 rounded-lg shadow-sm ${isOwnMessage
-                            ? (isGroupChat ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white' : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white')
-                            : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-green-100 dark:bg-green-800 text-green-900 dark:text-green-100')
+                          ? (isGroupChat ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white' : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white')
+                          : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-green-100 dark:bg-green-800 text-green-900 dark:text-green-100')
                           }`}>
                           {!isOwnMessage && (
                             <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
