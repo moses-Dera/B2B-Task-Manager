@@ -24,26 +24,26 @@ export default function EmployeeDashboard({ onNavigate }) {
       const response = await tasksAPI.updateTask(taskId, { status: 'completed' });
       if (response.success) {
         success('Task marked as completed!');
-        
+
         // Update tasks in state instead of reloading
         setTasks(prevTasks => {
-          const updateTaskInArray = (taskArray) => 
-            taskArray.map(task => 
+          const updateTaskInArray = (taskArray) =>
+            taskArray.map(task =>
               task._id === taskId ? { ...task, status: 'completed' } : task
             );
-          
+
           return {
             today: updateTaskInArray(prevTasks.today),
             week: updateTaskInArray(prevTasks.week),
             later: updateTaskInArray(prevTasks.later)
           };
         });
-        
+
         // Update focus task if it's the one being completed
         if (focusTask && focusTask._id === taskId) {
           setFocusTask(null);
         }
-        
+
         // Refresh performance stats
         try {
           const perfResponse = await tasksAPI.getPerformanceStats();
@@ -79,11 +79,11 @@ export default function EmployeeDashboard({ onNavigate }) {
           authAPI.getCurrentUser(),
           tasksAPI.getPerformanceStats()
         ]);
-        
+
         if (userResponse.success) {
           setUser(userResponse.user);
         }
-        
+
         // Load performance stats
         if (performanceResponse.success) {
           const perfData = performanceResponse.data;
@@ -96,11 +96,11 @@ export default function EmployeeDashboard({ onNavigate }) {
           });
           setWeeklyData(perfData.weekly_performance || []);
         }
-        
+
         const response = tasksResponse;
         if (response.success) {
           const allTasks = response.data;
-          
+
           // Categorize tasks
           const today = new Date();
           today.setHours(0, 0, 0, 0);
@@ -108,40 +108,40 @@ export default function EmployeeDashboard({ onNavigate }) {
           tomorrow.setDate(tomorrow.getDate() + 1);
           const nextWeek = new Date(today);
           nextWeek.setDate(nextWeek.getDate() + 7);
-          
+
           const todayTasks = allTasks.filter(task => {
             if (!task.due_date) return false;
             const dueDate = new Date(task.due_date);
             dueDate.setHours(0, 0, 0, 0);
             return dueDate.getTime() === today.getTime();
           });
-          
+
           const weekTasks = allTasks.filter(task => {
             if (!task.due_date) return false;
             const dueDate = new Date(task.due_date);
             dueDate.setHours(0, 0, 0, 0);
             return dueDate > today && dueDate <= nextWeek;
           });
-          
+
           const laterTasks = allTasks.filter(task => {
             if (!task.due_date) return true;
             const dueDate = new Date(task.due_date);
             dueDate.setHours(0, 0, 0, 0);
             return dueDate > nextWeek;
           });
-          
+
           // Always show all tasks in 'later' if no proper categorization
           setTasks({
             today: todayTasks,
             week: weekTasks,
             later: allTasks.length > 0 && (todayTasks.length + weekTasks.length + laterTasks.length) === 0 ? allTasks : laterTasks
           });
-          
+
           // Set focus task (most urgent)
           const urgentTask = todayTasks.find(task => task.priority === 'high' && task.status !== 'completed') ||
-                            todayTasks.find(task => task.status !== 'completed') ||
-                            weekTasks.find(task => task.priority === 'high' && task.status !== 'completed');
-          
+            todayTasks.find(task => task.status !== 'completed') ||
+            weekTasks.find(task => task.priority === 'high' && task.status !== 'completed');
+
           if (urgentTask) {
             setFocusTask({
               ...urgentTask,
@@ -149,7 +149,7 @@ export default function EmployeeDashboard({ onNavigate }) {
               priority: urgentTask.priority.charAt(0).toUpperCase() + urgentTask.priority.slice(1)
             });
           }
-          
+
           // Stats are now loaded from API above
         }
       } catch (error) {
@@ -191,11 +191,6 @@ export default function EmployeeDashboard({ onNavigate }) {
     }
   };
 
-  const getRowColor = (task) => {
-    if (task.status === 'overdue') return 'bg-red-50 border-red-200';
-    if (task.dueDate.includes('Today') || task.dueDate.includes('PM')) return 'bg-amber-50 border-amber-200';
-    return 'bg-white border-gray-200';
-  };
 
   return (
     <div className="space-y-8 bg-gray-50 dark:bg-gray-900 min-h-screen p-6 -m-6">
@@ -239,8 +234,8 @@ export default function EmployeeDashboard({ onNavigate }) {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 sm:space-x-3 w-full lg:w-auto">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 variant="outline"
                 onClick={() => {
                   const startDate = new Date();
@@ -252,7 +247,7 @@ export default function EmployeeDashboard({ onNavigate }) {
                 <CalendarPlus className="w-5 h-5 mr-2" />
                 Add to Calendar
               </Button>
-              <Button 
+              <Button
                 size="lg"
                 onClick={() => focusTask && handleMarkComplete(focusTask._id)}
                 disabled={!focusTask || updating === focusTask._id}
@@ -279,11 +274,10 @@ export default function EmployeeDashboard({ onNavigate }) {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === tab.key
-                        ? 'border-primary text-primary'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                    }`}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -292,114 +286,188 @@ export default function EmployeeDashboard({ onNavigate }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {tasks[activeTab]?.length > 0 ? tasks[activeTab].map((task) => (
-                  <div
-                    key={task._id || task.id}
-                    className={`p-4 rounded-lg border transition-colors ${getRowColor(task)}`}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
+                {tasks[activeTab]?.length > 0 ? tasks[activeTab].map((task) => {
+                  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed';
+                  const isDueToday = task.due_date && new Date(task.due_date).toDateString() === new Date().toDateString();
+
+                  return (
+                    <div
+                      key={task._id || task.id}
+                      className={`p-4 rounded-lg border transition-all hover:shadow-md ${task.status === 'completed'
+                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                        : isOverdue
+                          ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                          : isDueToday
+                            ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800'
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}
+                    >
+                      <div className="space-y-3">
+                        {/* Task Header */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start space-x-3 flex-1">
                             <input
                               type="checkbox"
                               checked={task.status === 'completed'}
                               onChange={() => task.status !== 'completed' && handleMarkComplete(task._id)}
                               disabled={updating === task._id}
-                              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                              className="w-5 h-5 mt-0.5 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
                             />
-                            <div>
-                              <p className={`font-medium ${task.status === 'completed' ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                            <div className="flex-1 min-w-0">
+                              <h4 className={`font-semibold text-base ${task.status === 'completed'
+                                ? 'line-through text-gray-500 dark:text-gray-400'
+                                : 'text-gray-900 dark:text-white'
+                                }`}>
                                 {task.title}
-                              </p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                              </p>
+                              </h4>
+                              {task.description && (
+                                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+                                  {task.description}
+                                </p>
+                              )}
                             </div>
                           </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge variant={getStatusColor(task.status)}>
+                              {task.status.replace('-', ' ')}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant={getStatusColor(task.status)}>
-                            {task.status.replace('-', ' ')}
-                          </Badge>
-                          <button 
-                            onClick={() => onNavigate && onNavigate('/employee/chat')}
-                            className="p-1 text-gray-400 dark:text-gray-300 hover:text-primary"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
+
+                        {/* Task Details */}
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                          {/* Priority */}
+                          <div className={`px-2 py-1 rounded-md ${getPriorityColor(task.priority)}`}>
+                            <span className="font-medium capitalize">{task.priority} Priority</span>
+                          </div>
+
+                          {/* Due Date */}
+                          <div className="flex items-center text-gray-600 dark:text-gray-300">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            <span>
+                              {task.due_date
+                                ? new Date(task.due_date).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })
+                                : 'No due date'}
+                            </span>
+                          </div>
+
+                          {/* Assigned By */}
+                          {task.assigned_by && (
+                            <div className="flex items-center text-gray-600 dark:text-gray-300">
+                              <span className="text-xs">
+                                Assigned by: <span className="font-medium">{task.assigned_by.name || 'Manager'}</span>
+                              </span>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      
-                      {/* File Upload Section */}
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <div className="flex items-center space-x-2">
-                          <label className="flex items-center space-x-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300 hover:text-primary">
-                            <input 
-                              type="file" 
-                              className="hidden" 
-                              multiple 
-                              onChange={async (e) => {
-                                const files = Array.from(e.target.files);
-                                if (files.length > 0) {
-                                  try {
-                                    for (const file of files) {
-                                      await tasksAPI.uploadFile(task._id, file);
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+                          <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                              <input
+                                type="file"
+                                className="hidden"
+                                multiple
+                                onChange={async (e) => {
+                                  const files = Array.from(e.target.files);
+                                  if (files.length > 0) {
+                                    try {
+                                      for (const file of files) {
+                                        await tasksAPI.uploadFile(task._id, file);
+                                      }
+                                      success(`${files.length} file(s) uploaded successfully!`);
+                                    } catch (err) {
+                                      error('Failed to upload files: ' + err.message);
                                     }
-                                    success(`${files.length} file(s) uploaded successfully!`);
-                                  } catch (err) {
-                                    error('Failed to upload files: ' + err.message);
                                   }
-                                }
+                                }}
+                              />
+                              <Paperclip className="w-4 h-4" />
+                              <span>Attach files</span>
+                            </label>
+
+                            <button
+                              onClick={() => {
+                                const startDate = new Date();
+                                const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                                const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(task.description || 'Task from TaskFlow')}`;
+                                window.open(googleCalendarUrl, '_blank');
                               }}
-                            />
-                            <Paperclip className="w-4 h-4" />
-                            <span>Attach files</span>
-                          </label>
-                          <button 
-                            onClick={() => {
-                              const startDate = new Date();
-                              const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-                              const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent('Task reminder from TaskFlow')}`;
-                              window.open(googleCalendarUrl, '_blank');
-                            }}
-                            className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-300 hover:text-primary"
-                          >
-                            <CalendarPlus className="w-4 h-4" />
-                            <span>Add to Calendar</span>
-                          </button>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={async () => {
-                            if (task.status === 'completed') {
-                              // Show submitted files
-                              try {
-                                const filesResponse = await tasksAPI.getTaskFiles(task._id);
-                                if (filesResponse.success) {
-                                  const fileList = filesResponse.data.map(f => f.name).join(', ');
-                                  success(`Submitted files: ${fileList}`);
-                                } else {
-                                  error('No files submitted yet');
+                              className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
+                            >
+                              <CalendarPlus className="w-4 h-4" />
+                              <span>Add to Calendar</span>
+                            </button>
+
+                            <button
+                              onClick={() => onNavigate && onNavigate('/employee/chat')}
+                              className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                              <span>Discuss</span>
+                            </button>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            variant={task.status === 'completed' ? 'outline' : 'default'}
+                            onClick={async () => {
+                              if (task.status === 'completed') {
+                                // Show submitted files
+                                try {
+                                  const filesResponse = await tasksAPI.getTaskFiles(task._id);
+                                  if (filesResponse.success && filesResponse.data.length > 0) {
+                                    const fileList = filesResponse.data.map(f => f.name).join(', ');
+                                    success(`Submitted files: ${fileList}`);
+                                  } else {
+                                    error('No files submitted yet');
+                                  }
+                                } catch (err) {
+                                  error('Failed to load files');
                                 }
-                              } catch (err) {
-                                error('Failed to load files');
+                              } else {
+                                handleMarkComplete(task._id);
                               }
-                            } else {
-                              error('Complete the task first to submit files');
-                            }
-                          }}
-                        >
-                          <Upload className="w-3 h-3 mr-1" />
-                          {task.status === 'completed' ? 'View Files' : 'Submit'}
-                        </Button>
+                            }}
+                            disabled={updating === task._id}
+                          >
+                            {updating === task._id ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1"></div>
+                                Updating...
+                              </>
+                            ) : task.status === 'completed' ? (
+                              <>
+                                <Upload className="w-3 h-3 mr-1" />
+                                View Files
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Mark Complete
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    No tasks in this category
+                  );
+                }) : (
+                  <div className="text-center py-12">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                      <CheckCircle className="w-8 h-8 text-gray-400 dark:text-gray-600" />
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">No tasks in this category</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                      {activeTab === 'today' && 'You have no tasks due today'}
+                      {activeTab === 'week' && 'You have no tasks due this week'}
+                      {activeTab === 'later' && 'You have no upcoming tasks'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -449,8 +517,8 @@ export default function EmployeeDashboard({ onNavigate }) {
                     <span className="text-sm text-gray-600 dark:text-gray-300">{week.name}</span>
                     <div className="flex items-center space-x-2">
                       <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
+                        <div
+                          className="bg-primary h-2 rounded-full"
                           style={{ width: `${Math.min(100, (week.value / 10) * 100)}%` }}
                         ></div>
                       </div>
@@ -461,7 +529,7 @@ export default function EmployeeDashboard({ onNavigate }) {
               </div>
             </CardContent>
           </Card>
-          
+
           {stats.completed > 0 && (
             <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <CardContent className="p-6 text-center">
