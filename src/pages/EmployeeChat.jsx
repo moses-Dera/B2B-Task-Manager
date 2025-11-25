@@ -1,23 +1,33 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Users, Search } from 'lucide-react';
+import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
 import { useNotification } from '../hooks/useNotification';
 import { useSocket } from '../context/SocketContext';
 
+// Common emoji reactions
+const EMOJI_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🎉', '🔥', '👏'];
+
 export default function EmployeeChat() {
-  const { error } = useNotification();
+  const { error, success } = useNotification();
   const { socket, isConnected, isUserOnline } = useSocket();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null); // null = group chat
+  const [selectedUser, setSelectedUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [messageSearchQuery, setMessageSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingUser, setTypingUser] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+  const [showMessageMenu, setShowMessageMenu] = useState(null);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -35,6 +45,9 @@ export default function EmployeeChat() {
         if (teamResponse.success) {
           setTeamMembers(teamResponse.data || []);
         }
+
+        // Load unread counts
+        loadUnreadCounts();
       } catch (error) {
         console.error('Failed to load data:', error);
       } finally {
@@ -49,23 +62,24 @@ export default function EmployeeChat() {
   useEffect(() => {
     const loadMessages = async () => {
       try {
-        const messagesResponse = await chatAPI.getMessages();
+        const params = selectedUser ? { recipient_id: selectedUser._id } : {};
+        const messagesResponse = await chatAPI.getMessages(params);
 
         if (messagesResponse.success) {
-          let filteredMessages = messagesResponse.data || [];
+          setMessages(messagesResponse.data || []);
 
+          // Mark messages as read
           if (selectedUser) {
-            // Direct messages only
-            filteredMessages = filteredMessages.filter(msg =>
-              msg.recipient_id === selectedUser._id ||
-              (msg.sender_id._id === selectedUser._id && msg.recipient_id === currentUser?.id)
-            );
+            await chatAPI.markAllAsRead(selectedUser._id);
           } else {
-            // Group messages only (no recipient_id)
-            filteredMessages = filteredMessages.filter(msg => !msg.recipient_id);
+            await chatAPI.markAllAsRead();
           }
+        }
 
-          setMessages(filteredMessages);
+        // Load pinned messages
+        const pinnedResponse = await chatAPI.getPinnedMessages(selectedUser?._id);
+        if (pinnedResponse.success) {
+          setPinnedMessages(pinnedResponse.data || []);
         }
       } catch (error) {
         console.error('Failed to load messages:', error);
@@ -77,23 +91,45 @@ export default function EmployeeChat() {
     }
   }, [selectedUser, loading]);
 
-  // Socket.io real-time message listener
+  // Load unread counts
+  const loadUnreadCounts = async () => {
+    try {
+      const response = await chatAPI.getUnreadCount();
+      if (response.success) {
+        const counts = {};
+        response.data.forEach(item => {
+          counts[item._id] = item.unreadCount;
+        });
+        setUnreadCounts(counts);
+      }
+    } catch (error) {
+      console.error('Failed to load unread counts:', error);
+    }
+  };
+
+  // Socket.io real-time listeners
   useEffect(() => {
     if (!socket || !currentUser) return;
 
     const handleNewMessage = (data) => {
-      console.log('📨 New message received via Socket.io:', data);
+      console.log('📨 New message received:', data);
 
-      // Add message if it's for current conversation
-      if (!selectedUser && !data.message.recipient_id) {
-        // Group message
+      const isRelevant = !selectedUser && !data.message.recipient_id ||
+        selectedUser && data.message.sender_id && (
+          data.message.sender_id._id === selectedUser._id ||
+          data.message.recipient_id?._id === selectedUser._id
+        );
+
+      if (isRelevant) {
         setMessages(prev => [...prev, data.message]);
-      } else if (selectedUser && data.message.sender_id && (
-        data.message.sender_id._id === selectedUser._id ||
-        (data.message.recipient_id && data.message.recipient_id._id === selectedUser._id)
-      )) {
-        // Direct message with selected user
-        setMessages(prev => [...prev, data.message]);
+
+        // Mark as read if conversation is open
+        if (data.message.sender_id._id !== currentUser.id) {
+          chatAPI.markAsRead(data.message._id).catch(console.error);
+        }
+      } else {
+        // Update unread count
+        loadUnreadCounts();
       }
     };
 
@@ -111,14 +147,52 @@ export default function EmployeeChat() {
       }
     };
 
+    const handleMessageReaction = (data) => {
+      setMessages(prev => prev.map(msg =>
+        msg._id === data.messageId
+          ? { ...msg, reactions: updateReactions(msg.reactions, data) }
+          : msg
+      ));
+    };
+
+    const handleMessageEdited = (data) => {
+      setMessages(prev => prev.map(msg =>
+        msg._id === data.messageId
+          ? { ...msg, message: data.newMessage, isEdited: true, editedAt: data.editedAt }
+          : msg
+      ));
+    };
+
+    const handleMessageDeleted = (data) => {
+      setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+    };
+
+    const handleMessagePinned = (data) => {
+      if (data.isPinned) {
+        chatAPI.getPinnedMessages(selectedUser?._id).then(response => {
+          if (response.success) setPinnedMessages(response.data || []);
+        });
+      } else {
+        setPinnedMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+      }
+    };
+
     socket.on('new_message', handleNewMessage);
     socket.on('user_typing', handleUserTyping);
     socket.on('user_stop_typing', handleUserStopTyping);
+    socket.on('message_reaction', handleMessageReaction);
+    socket.on('message_edited', handleMessageEdited);
+    socket.on('message_deleted', handleMessageDeleted);
+    socket.on('message_pinned', handleMessagePinned);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleUserTyping);
       socket.off('user_stop_typing', handleUserStopTyping);
+      socket.off('message_reaction', handleMessageReaction);
+      socket.off('message_edited', handleMessageEdited);
+      socket.off('message_deleted', handleMessageDeleted);
+      socket.off('message_pinned', handleMessagePinned);
     };
   }, [socket, currentUser, selectedUser]);
 
@@ -126,30 +200,67 @@ export default function EmployeeChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+  const updateReactions = (reactions, data) => {
+    if (!reactions) reactions = [];
 
-    try {
-      const messageData = {
-        message: newMessage,
-        ...(selectedUser && { recipient_id: selectedUser._id })
-      };
-
-      const response = await chatAPI.sendMessage(messageData);
-      if (response.success) {
-        setMessages(prev => [...prev, response.data]);
-
-        // Emit via Socket.io for real-time delivery
-        if (socket) {
-          socket.emit('send_message', {
-            recipientId: selectedUser?._id,
-            message: newMessage
-          });
+    if (data.action === 'add') {
+      const existing = reactions.find(r => r.emoji === data.emoji);
+      if (existing) {
+        if (!existing.users.some(u => u._id === data.userId)) {
+          existing.users.push({ _id: data.userId, name: data.userName });
+        }
+      } else {
+        reactions.push({ emoji: data.emoji, users: [{ _id: data.userId, name: data.userName }] });
+      }
+    } else {
+      const index = reactions.findIndex(r => r.emoji === data.emoji);
+      if (index !== -1) {
+        reactions[index].users = reactions[index].users.filter(u => u._id !== data.userId);
+        if (reactions[index].users.length === 0) {
+          reactions.splice(index, 1);
         }
       }
-      setNewMessage('');
+    }
 
-      // Stop typing indicator
+    return [...reactions];
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() && !editingMessage) return;
+
+    try {
+      if (editingMessage) {
+        const response = await chatAPI.editMessage(editingMessage._id, newMessage);
+        if (response.success) {
+          setMessages(prev => prev.map(msg =>
+            msg._id === editingMessage._id ? response.data : msg
+          ));
+          setEditingMessage(null);
+          setNewMessage('');
+          success('Message updated');
+        }
+      } else {
+        const messageData = {
+          message: newMessage,
+          ...(selectedUser && { recipient_id: selectedUser._id }),
+          ...(replyingTo && { replyTo: replyingTo._id })
+        };
+
+        const response = await chatAPI.sendMessage(messageData);
+        if (response.success) {
+          setMessages(prev => [...prev, response.data]);
+
+          if (socket) {
+            socket.emit('send_message', {
+              recipientId: selectedUser?._id,
+              message: newMessage
+            });
+          }
+        }
+        setNewMessage('');
+        setReplyingTo(null);
+      }
+
       if (socket && selectedUser) {
         socket.emit('stop_typing', { recipientId: selectedUser._id });
       }
@@ -162,16 +273,13 @@ export default function EmployeeChat() {
   const handleTyping = (e) => {
     setNewMessage(e.target.value);
 
-    // Emit typing indicator
     if (socket && selectedUser && e.target.value.trim()) {
       socket.emit('typing', { recipientId: selectedUser._id });
 
-      // Clear previous timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
 
-      // Stop typing after 2 seconds of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit('stop_typing', { recipientId: selectedUser._id });
       }, 2000);
@@ -185,6 +293,61 @@ export default function EmployeeChat() {
     }
   };
 
+  const handleReaction = async (messageId, emoji) => {
+    try {
+      const message = messages.find(m => m._id === messageId);
+      const existingReaction = message?.reactions?.find(r => r.emoji === emoji);
+      const hasReacted = existingReaction?.users?.some(u => u._id === currentUser?.id);
+
+      if (hasReacted) {
+        await chatAPI.removeReaction(messageId, emoji);
+      } else {
+        await chatAPI.addReaction(messageId, emoji);
+      }
+
+      setShowEmojiPicker(null);
+    } catch (err) {
+      error('Failed to add reaction');
+    }
+  };
+
+  const handleEditMessage = (message) => {
+    setEditingMessage(message);
+    setNewMessage(message.message);
+    setShowMessageMenu(null);
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    if (!confirm('Are you sure you want to delete this message?')) return;
+
+    try {
+      await chatAPI.deleteMessage(messageId);
+      setMessages(prev => prev.filter(msg => msg._id !== messageId));
+      success('Message deleted');
+      setShowMessageMenu(null);
+    } catch (err) {
+      error('Failed to delete message');
+    }
+  };
+
+  const handleSearchMessages = async () => {
+    if (!messageSearchQuery.trim()) {
+      const params = selectedUser ? { recipient_id: selectedUser._id } : {};
+      const response = await chatAPI.getMessages(params);
+      if (response.success) setMessages(response.data || []);
+      return;
+    }
+
+    try {
+      const response = await chatAPI.searchMessages(messageSearchQuery, selectedUser?._id);
+      if (response.success) {
+        setMessages(response.data || []);
+      }
+    } catch (err) {
+      error('Search failed');
+    }
+  };
+
   const filteredTeamMembers = teamMembers.filter(member =>
     member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     member.email.toLowerCase().includes(searchQuery.toLowerCase())
@@ -195,6 +358,21 @@ export default function EmployeeChat() {
       return selectedUser.name;
     }
     return 'Group Chat';
+  };
+
+  const formatTimestamp = (date) => {
+    const now = new Date();
+    const msgDate = new Date(date);
+    const diffDays = Math.floor((now - msgDate) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) {
+      return msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffDays === 1) {
+      return 'Yesterday ' + msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return msgDate.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+        msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   };
 
   if (loading) {
@@ -254,6 +432,11 @@ export default function EmployeeChat() {
                   <p className="font-medium text-gray-900 dark:text-white">Group Chat</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Everyone in your company</p>
                 </div>
+                {unreadCounts['group'] > 0 && (
+                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {unreadCounts['group']}
+                  </span>
+                )}
               </button>
 
               {/* Individual Users */}
@@ -270,7 +453,6 @@ export default function EmployeeChat() {
                         {member.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {/* Online status indicator */}
                     {isUserOnline(member._id) && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
                     )}
@@ -279,6 +461,11 @@ export default function EmployeeChat() {
                     <p className="font-medium text-gray-900 dark:text-white text-sm">{member.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{member.role}</p>
                   </div>
+                  {unreadCounts[member._id] > 0 && (
+                    <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCounts[member._id]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -293,12 +480,45 @@ export default function EmployeeChat() {
                 <MessageSquare className="w-5 h-5 mr-2" />
                 {getChatTitle()}
               </div>
-              <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-                {selectedUser ? 'Direct Message' : 'Group Chat'}
-              </span>
+              <div className="flex items-center gap-2">
+                {/* Message Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search messages..."
+                    value={messageSearchQuery}
+                    onChange={(e) => {
+                      setMessageSearchQuery(e.target.value);
+                      if (e.target.value === '') handleSearchMessages();
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearchMessages()}
+                    className="pl-9 pr-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-48"
+                  />
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  {selectedUser ? 'Direct Message' : 'Group Chat'}
+                </span>
+              </div>
             </CardTitle>
           </CardHeader>
+
           <CardContent className="flex-1 flex flex-col p-0">
+            {/* Pinned Messages */}
+            {pinnedMessages.length > 0 && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Pin className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                  <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Pinned Messages</span>
+                </div>
+                {pinnedMessages.slice(0, 2).map(msg => (
+                  <div key={msg._id} className="text-sm text-yellow-700 dark:text-yellow-300 truncate">
+                    <strong>{msg.sender_id.name}:</strong> {msg.message}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
               {messages.length === 0 ? (
@@ -312,25 +532,112 @@ export default function EmployeeChat() {
                 messages.filter(msg => msg != null && msg.sender_id != null).map((msg) => {
                   const isOwnMessage = currentUser && msg.sender_id._id === currentUser.id;
                   const isGroupChat = !selectedUser;
+
                   return (
-                    <div key={msg._id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage
-                        ? (isGroupChat ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white')
-                        : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-green-100 dark:bg-green-800 text-green-900 dark:text-green-100')
-                        }`}>
-                        {!isOwnMessage && (
-                          <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
+                    <div key={msg._id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group`}>
+                      <div className={`max-w-xs lg:max-w-md relative`}>
+                        {msg.replyTo && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 italic">
+                            Replying to: {msg.replyTo.message?.substring(0, 50)}...
+                          </div>
                         )}
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
-                        <p className="text-xs opacity-75 mt-1">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+
+                        <div className={`px-4 py-2 rounded-lg shadow-sm ${isOwnMessage
+                            ? (isGroupChat ? 'bg-gradient-to-r from-blue-500 to-blue-400 text-white' : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white')
+                            : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-green-100 dark:bg-green-800 text-green-900 dark:text-green-100')
+                          }`}>
+                          {!isOwnMessage && (
+                            <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
+                          )}
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
+
+                          {msg.reactions && msg.reactions.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {msg.reactions.map((reaction, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleReaction(msg._id, reaction.emoji)}
+                                  className="bg-white dark:bg-gray-800 rounded-full px-2 py-0.5 text-xs flex items-center gap-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                  title={reaction.users.map(u => u.name).join(', ')}
+                                >
+                                  <span>{reaction.emoji}</span>
+                                  <span className="text-gray-600 dark:text-gray-400">{reaction.users.length}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between mt-1">
+                            <p className="text-xs opacity-75">
+                              {formatTimestamp(msg.createdAt)}
+                              {msg.isEdited && <span className="ml-1">(edited)</span>}
+                            </p>
+
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                              <button
+                                onClick={() => setShowEmojiPicker(showEmojiPicker === msg._id ? null : msg._id)}
+                                className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+                                title="Add reaction"
+                              >
+                                <Smile className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => setReplyingTo(msg)}
+                                className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+                                title="Reply"
+                              >
+                                <Reply className="w-3 h-3" />
+                              </button>
+                              {isOwnMessage && (
+                                <button
+                                  onClick={() => setShowMessageMenu(showMessageMenu === msg._id ? null : msg._id)}
+                                  className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
+                                  title="More options"
+                                >
+                                  <MoreVertical className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {showEmojiPicker === msg._id && (
+                          <div className="absolute bottom-full mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex gap-1 z-10">
+                            {EMOJI_OPTIONS.map(emoji => (
+                              <button
+                                key={emoji}
+                                onClick={() => handleReaction(msg._id, emoji)}
+                                className="hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded text-lg"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {showMessageMenu === msg._id && isOwnMessage && (
+                          <div className="absolute bottom-full mb-2 right-0 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10 min-w-[150px]">
+                            <button
+                              onClick={() => handleEditMessage(msg)}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessage(msg._id)}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })
               )}
-              {/* Typing indicator */}
               {isTyping && typingUser && (
                 <div className="flex justify-start">
                   <div className="max-w-xs px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
@@ -342,6 +649,34 @@ export default function EmployeeChat() {
               )}
               <div ref={messagesEndRef} />
             </div>
+
+            {replyingTo && (
+              <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Reply className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Replying to {replyingTo.sender_id.name}: {replyingTo.message.substring(0, 50)}...
+                  </span>
+                </div>
+                <button onClick={() => setReplyingTo(null)} className="text-gray-500 hover:text-gray-700">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {editingMessage && (
+              <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Edit2 className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm text-blue-600 dark:text-blue-400">
+                    Editing message
+                  </span>
+                </div>
+                <button onClick={() => { setEditingMessage(null); setNewMessage(''); }} className="text-blue-600 hover:text-blue-700">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
             {/* Message Input */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">

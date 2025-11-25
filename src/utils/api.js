@@ -14,13 +14,13 @@ const setAuthToken = (token) => {
   if (!token || typeof token !== 'string') {
     throw new Error('Invalid token format');
   }
-  
+
   // Basic token format validation (JWT tokens should match this pattern)
   const tokenPattern = /^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/;
   if (!tokenPattern.test(token)) {
     throw new Error('Invalid token format');
   }
-  
+
   localStorage.setItem(TOKEN_KEY, token);
 };
 
@@ -29,13 +29,13 @@ const clearAuthToken = () => {
   const tokenKeys = [
     TOKEN_KEY,
     'taskManagerUser',
-    'taskflow_auth', 
+    'taskflow_auth',
     'user',
     'token',
     'authToken',
     'currentUser'
   ];
-  
+
   tokenKeys.forEach(key => localStorage.removeItem(key));
 };
 
@@ -63,16 +63,16 @@ const apiRequest = async (endpoint, options = {}, retries = 1) => {
   try {
     const baseUrl = API_BASE_URL.replace(/\/+$/, ''); // Remove trailing slashes
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    
+
     // Validate base URL is from allowed domain
     const allowedDomains = ['task-manger-backend-z2yz.onrender.com', 'localhost'];
     const baseUrlObj = new URL(baseUrl);
     if (!allowedDomains.includes(baseUrlObj.hostname)) {
       throw new Error('Invalid API domain');
     }
-    
+
     fullUrl = `${baseUrl}${normalizedEndpoint}`;
-    
+
     // Final URL validation
     const finalUrlObj = new URL(fullUrl);
     if (!allowedDomains.includes(finalUrlObj.hostname)) {
@@ -99,14 +99,14 @@ const apiRequest = async (endpoint, options = {}, retries = 1) => {
         // If response is not JSON, use status text
         errorMessage = response.statusText || errorMessage;
       }
-      
+
       // Retry on server errors (5xx) but not client errors (4xx)
       if (response.status >= 500 && retries > 0) {
         console.warn(`Retrying request to ${endpoint}, attempts left: ${retries}`);
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
         return apiRequest(endpoint, options, retries - 1);
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -116,14 +116,14 @@ const apiRequest = async (endpoint, options = {}, retries = 1) => {
     if (error.name === 'AbortError') {
       throw new Error('Request timeout - please try again');
     }
-    
+
     // Retry on network errors
     if (retries > 0 && (error.name === 'TypeError' || error.message.includes('fetch'))) {
       console.warn(`Retrying request to ${endpoint} due to network error, attempts left: ${retries}`);
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return apiRequest(endpoint, options, retries - 1);
     }
-    
+
     console.error('API request failed:', error);
     throw error;
   }
@@ -264,6 +264,58 @@ export const chatAPI = {
       method: 'POST',
       body: JSON.stringify(messageData),
     }),
+
+  markAsRead: (messageId) =>
+    apiRequest(`/chat/messages/${messageId}/read`, {
+      method: 'PUT',
+    }),
+
+  markAllAsRead: (recipientId = null) =>
+    apiRequest('/chat/messages/read-all', {
+      method: 'PUT',
+      body: JSON.stringify({ recipient_id: recipientId }),
+    }),
+
+  addReaction: (messageId, emoji) =>
+    apiRequest(`/chat/messages/${messageId}/reactions`, {
+      method: 'POST',
+      body: JSON.stringify({ emoji }),
+    }),
+
+  removeReaction: (messageId, emoji) =>
+    apiRequest(`/chat/messages/${messageId}/reactions/${emoji}`, {
+      method: 'DELETE',
+    }),
+
+  searchMessages: (query, recipientId = null) => {
+    const params = new URLSearchParams({ query });
+    if (recipientId) params.append('recipient_id', recipientId);
+    return apiRequest(`/chat/messages/search?${params.toString()}`);
+  },
+
+  getUnreadCount: () => apiRequest('/chat/messages/unread-count'),
+
+  editMessage: (messageId, newMessage) =>
+    apiRequest(`/chat/messages/${messageId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ message: newMessage }),
+    }),
+
+  deleteMessage: (messageId) =>
+    apiRequest(`/chat/messages/${messageId}`, {
+      method: 'DELETE',
+    }),
+
+  pinMessage: (messageId, isPinned) =>
+    apiRequest(`/chat/messages/${messageId}/pin`, {
+      method: 'PUT',
+      body: JSON.stringify({ isPinned }),
+    }),
+
+  getPinnedMessages: (recipientId = null) => {
+    const params = recipientId ? new URLSearchParams({ recipient_id: recipientId }) : '';
+    return apiRequest(`/chat/messages/pinned${params ? `?${params}` : ''}`);
+  },
 };
 
 // Notifications API
