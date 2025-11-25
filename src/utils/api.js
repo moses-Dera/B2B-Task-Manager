@@ -183,7 +183,7 @@ export const teamAPI = {
 
 // Chat API
 export const chatAPI = {
-  getTeamMembers: () => apiRequest('/chat/team-members'),
+  // getTeamMembers: () => apiRequest('/chat/team-members'), // Endpoint may not exist
 
   getMessages: (params = {}) => {
     const query = new URLSearchParams(params).toString();
