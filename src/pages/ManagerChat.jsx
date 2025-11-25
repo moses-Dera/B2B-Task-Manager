@@ -695,7 +695,7 @@ export default function ManagerChat() {
 
                         {/* Emoji Picker */}
                         {showEmojiPicker === msg._id && (
-                          <div className="absolute bottom-full mb-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 flex gap-1 z-50 border border-gray-200 dark:border-gray-600">
+                          <div className="absolute top-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl p-2 flex gap-1 z-50 border border-gray-200 dark:border-gray-600">
                             {EMOJI_OPTIONS.map(emoji => (
                               <button
                                 key={emoji}
