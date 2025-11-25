@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Image as ImageIcon } from 'lucide-react';
+import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Paperclip } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
@@ -724,16 +724,51 @@ export default function ManagerChat() {
 
             {/* Message Input */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-2">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <textarea
+                    value={newMessage}
+                    onChange={handleTyping}
+                    onKeyPress={handleKeyPress}
+                    placeholder={`Message ${selectedUser ? selectedUser.name : 'the team'}...`}
+                    rows={1}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                    style={{ minHeight: '42px', maxHeight: '120px' }}
+                    onInput={(e) => {
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                    }}
+                  />
+                </div>
                 <input
-                  type="text"
-                  value={newMessage}
-                  onChange={handleTyping}
-                  onKeyPress={handleKeyPress}
-                  placeholder={`Message ${selectedUser ? selectedUser.name : 'the team'}...`}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                      // For now, just show file names in the message
+                      const fileNames = files.map(f => f.name).join(', ');
+                      success(`Files selected: ${fileNames}. (Note: File upload backend integration pending)`);
+                      // TODO: Implement actual file upload to server
+                    }
+                  }}
                 />
-                <Button onClick={sendMessage} disabled={!newMessage.trim()}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Attach file"
+                  className="flex-shrink-0"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
+                  className="flex-shrink-0"
+                >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
