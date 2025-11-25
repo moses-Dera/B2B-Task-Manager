@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/layout/Layout';
 import NotificationContainer from './components/NotificationContainer';
 import { NotificationProvider } from './context/NotificationContext';
+import { SocketProvider } from './context/SocketContext';
 import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import ManagerChat from './pages/ManagerChat';
@@ -50,7 +51,7 @@ function App() {
     // Common pages for all roles
     if (currentPath === '/profile') return <Profile user={user} theme={theme} />;
     if (currentPath === '/settings') return <Settings isDark={isDark} setIsDark={setIsDark} theme={theme} currentTheme={currentTheme} />;
-    
+
     switch (user.role) {
       case 'admin':
         if (currentPath === '/admin/users' || currentPath === '/user-management') return <UserManagement />;
@@ -75,56 +76,58 @@ function App() {
 
   return (
     <NotificationProvider>
-      <Router>
-        <div className={isDark ? 'dark' : ''} style={{ backgroundColor: theme.background, color: theme.color, minHeight: '100vh' }}>
-          <NotificationContainer />
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={
-              !user ? (
-                showLanding ? (
-                  <LandingPage 
-                    onGetStarted={() => setShowLanding(false)}
-                    isDark={isDark}
-                    setIsDark={setIsDark}
-                  />
+      <SocketProvider>
+        <Router>
+          <div className={isDark ? 'dark' : ''} style={{ backgroundColor: theme.background, color: theme.color, minHeight: '100vh' }}>
+            <NotificationContainer />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={
+                !user ? (
+                  showLanding ? (
+                    <LandingPage
+                      onGetStarted={() => setShowLanding(false)}
+                      isDark={isDark}
+                      setIsDark={setIsDark}
+                    />
+                  ) : (
+                    <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+                  )
                 ) : (
-                  <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+                  <Navigate to={`/${user.role}`} replace />
                 )
-              ) : (
-                <Navigate to={`/${user.role}`} replace />
-              )
-            } />
-            <Route path="/login" element={
-              !user ? (
-                <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
-              ) : (
-                <Navigate to={`/${user.role}`} replace />
-              )
-            } />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            
-            {/* Protected routes */}
-            <Route path="/*" element={
-              user ? (
-                <Layout 
-                  userRole={user.role} 
-                  userName={user.name}
-                  currentPath={currentPath}
-                  onNavigate={handleNavigation}
-                  onLogout={logout}
-                  theme={theme}
-                >
-                  {renderDashboard()}
-                </Layout>
-              ) : (
-                <Navigate to="/" replace />
-              )
-            } />
-          </Routes>
-        </div>
-      </Router>
+              } />
+              <Route path="/login" element={
+                !user ? (
+                  <Login onLogin={login} onBackToLanding={() => setShowLanding(true)} />
+                ) : (
+                  <Navigate to={`/${user.role}`} replace />
+                )
+              } />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+
+              {/* Protected routes */}
+              <Route path="/*" element={
+                user ? (
+                  <Layout
+                    userRole={user.role}
+                    userName={user.name}
+                    currentPath={currentPath}
+                    onNavigate={handleNavigation}
+                    onLogout={logout}
+                    theme={theme}
+                  >
+                    {renderDashboard()}
+                  </Layout>
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              } />
+            </Routes>
+          </div>
+        </Router>
+      </SocketProvider>
     </NotificationProvider>
   );
 }

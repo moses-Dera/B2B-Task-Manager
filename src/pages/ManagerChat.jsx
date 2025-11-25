@@ -4,9 +4,11 @@ import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card'
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
 import { useNotification } from '../hooks/useNotification';
+import { useSocket } from '../context/SocketContext';
 
 export default function ManagerChat() {
   const { error } = useNotification();
+  const { socket, isConnected, isUserOnline } = useSocket();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -14,7 +16,10 @@ export default function ManagerChat() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null); // null = group chat
   const [searchQuery, setSearchQuery] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState(null);
   const messagesEndRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,21 +50,21 @@ export default function ManagerChat() {
     const loadMessages = async () => {
       try {
         const messagesResponse = await chatAPI.getMessages();
-        
+
         if (messagesResponse.success) {
           let filteredMessages = messagesResponse.data || [];
-          
+
           if (selectedUser) {
             // Direct messages only
-            filteredMessages = filteredMessages.filter(msg => 
-              msg.recipient_id === selectedUser._id || 
+            filteredMessages = filteredMessages.filter(msg =>
+              msg.recipient_id === selectedUser._id ||
               (msg.sender_id._id === selectedUser._id && msg.recipient_id === currentUser?.id)
             );
           } else {
             // Group messages only (no recipient_id)
             filteredMessages = filteredMessages.filter(msg => !msg.recipient_id);
           }
-          
+
           setMessages(filteredMessages);
         }
       } catch (error) {
@@ -71,6 +76,48 @@ export default function ManagerChat() {
       loadMessages();
     }
   }, [selectedUser, loading]);
+
+  // Socket.io real-time message listener
+  useEffect(() => {
+    if (!socket || !currentUser) return;
+
+    const handleNewMessage = (data) => {
+      console.log('📨 New message received:', data);
+
+      if (!selectedUser && !data.message.recipient_id) {
+        setMessages(prev => [...prev, data.message]);
+      } else if (selectedUser && (
+        data.message.sender_id._id === selectedUser._id ||
+        data.message.recipient_id?._id === selectedUser._id
+      )) {
+        setMessages(prev => [...prev, data.message]);
+      }
+    };
+
+    const handleUserTyping = (data) => {
+      if (selectedUser && data.userId === selectedUser._id) {
+        setTypingUser(data.userName);
+        setIsTyping(true);
+      }
+    };
+
+    const handleUserStopTyping = (data) => {
+      if (selectedUser && data.userId === selectedUser._id) {
+        setIsTyping(false);
+        setTypingUser(null);
+      }
+    };
+
+    socket.on('new_message', handleNewMessage);
+    socket.on('user_typing', handleUserTyping);
+    socket.on('user_stop_typing', handleUserStopTyping);
+
+    return () => {
+      socket.off('new_message', handleNewMessage);
+      socket.off('user_typing', handleUserTyping);
+      socket.off('user_stop_typing', handleUserStopTyping);
+    };
+  }, [socket, currentUser, selectedUser]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,11 +135,38 @@ export default function ManagerChat() {
       const response = await chatAPI.sendMessage(messageData);
       if (response.success) {
         setMessages(prev => [...prev, response.data]);
+
+        if (socket) {
+          socket.emit('send_message', {
+            recipientId: selectedUser?._id,
+            message: newMessage
+          });
+        }
       }
       setNewMessage('');
+
+      if (socket && selectedUser) {
+        socket.emit('stop_typing', { recipientId: selectedUser._id });
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
       error('Failed to send message: ' + err.message);
+    }
+  };
+
+  const handleTyping = (e) => {
+    setNewMessage(e.target.value);
+
+    if (socket && selectedUser && e.target.value.trim()) {
+      socket.emit('typing', { recipientId: selectedUser._id });
+
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.emit('stop_typing', { recipientId: selectedUser._id });
+      }, 2000);
     }
   };
 
@@ -188,7 +262,9 @@ export default function ManagerChat() {
                         {member.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                    {isUserOnline(member._id) && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                    )}
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900 dark:text-white text-sm">{member.name}</p>
@@ -230,8 +306,8 @@ export default function ManagerChat() {
                   return (
                     <div key={msg._id} className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${isOwnMessage
-                          ? (isGroupChat ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white')
-                          : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-emerald-100 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100')
+                        ? (isGroupChat ? 'bg-blue-600 text-white' : 'bg-indigo-600 text-white')
+                        : (isGroupChat ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : 'bg-emerald-100 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100')
                         }`}>
                         {!isOwnMessage && (
                           <p className="text-xs font-medium mb-1 opacity-75">{msg.sender_id.name}</p>
@@ -245,6 +321,15 @@ export default function ManagerChat() {
                   );
                 })
               )}
+              {isTyping && typingUser && (
+                <div className="flex justify-start">
+                  <div className="max-w-xs px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                      {typingUser} is typing...
+                    </p>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -254,7 +339,7 @@ export default function ManagerChat() {
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={handleTyping}
                   onKeyPress={handleKeyPress}
                   placeholder={`Message ${selectedUser ? selectedUser.name : 'the team'}...`}
                   className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"

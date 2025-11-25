@@ -3,8 +3,10 @@ import { Bell, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import { notificationsAPI } from '../utils/api';
+import { useSocket } from '../context/SocketContext';
 
 export default function EmployeeNotifications() {
+  const { socket, isConnected } = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +26,34 @@ export default function EmployeeNotifications() {
 
     loadNotifications();
   }, []);
+
+  // Socket.io real-time notification listener
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewNotification = (data) => {
+      console.log('🔔 New notification received:', data);
+
+      // Add new notification to the top of the list
+      const newNotif = {
+        id: data.id,
+        title: data.title,
+        message: data.message,
+        type: data.type,
+        read: false,
+        time: 'Just now',
+        createdAt: data.timestamp
+      };
+
+      setNotifications(prev => [newNotif, ...prev]);
+    };
+
+    socket.on('new_notification', handleNewNotification);
+
+    return () => {
+      socket.off('new_notification', handleNewNotification);
+    };
+  }, [socket]);
 
   const getIcon = (type) => {
     switch (type) {
@@ -59,9 +89,8 @@ export default function EmployeeNotifications() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`flex items-start space-x-3 p-3 rounded-lg border ${
-                    notification.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
-                  }`}
+                  className={`flex items-start space-x-3 p-3 rounded-lg border ${notification.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
+                    }`}
                 >
                   {getIcon(notification.type)}
                   <div className="flex-1">
