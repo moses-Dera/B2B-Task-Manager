@@ -518,8 +518,8 @@ export default function ManagerChat() {
         </Card>
 
         {/* Chat Area */}
-        <Card className="flex-1 flex flex-col overflow-y-auto">
-          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+        <Card className="flex-1 flex flex-col overflow-hidden">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800">
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
                 <MessageSquare className="w-5 h-5 mr-2" />
@@ -548,7 +548,7 @@ export default function ManagerChat() {
             </CardTitle>
           </CardHeader>
 
-          <CardContent className="flex-1 flex flex-col p-0">
+          <CardContent className="flex-1 flex flex-col p-0 min-h-0">
             {/* Pinned Messages */}
             {pinnedMessages.length > 0 && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-800 p-3">
@@ -565,7 +565,7 @@ export default function ManagerChat() {
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 h-0">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                   <div className="text-center">
