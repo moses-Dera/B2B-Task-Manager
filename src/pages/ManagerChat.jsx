@@ -518,7 +518,7 @@ export default function ManagerChat() {
         </Card>
 
         {/* Chat Area */}
-        <Card className="flex-1 flex flex-col">
+        <Card className="flex-1 flex flex-col overflow-y-auto">
           <CardHeader className="border-b border-gray-200 dark:border-gray-700">
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
