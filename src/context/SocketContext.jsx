@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { getAuthToken } from '../utils/api';
+import { useNotification } from '../hooks/useNotification';
 
 const SocketContext = createContext(null);
 
@@ -16,6 +17,7 @@ export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const { showNotification } = useNotification();
 
     useEffect(() => {
         const token = getAuthToken();
@@ -75,6 +77,16 @@ export const SocketProvider = ({ children }) => {
             setOnlineUsers(prev => prev.filter(id => id !== data.userId));
         });
 
+        // Global Notification Listener
+        newSocket.on('notification', (data) => {
+            console.log('🔔 Received notification:', data);
+            // Play a subtle sound if desired (optional)
+            // const audio = new Audio('/notification.mp3');
+            // audio.play().catch(e => console.log('Audio play failed', e));
+
+            showNotification(data.message, data.type || 'info', 5000);
+        });
+
         setSocket(newSocket);
 
         // Cleanup on unmount
@@ -82,7 +94,7 @@ export const SocketProvider = ({ children }) => {
             console.log('🔌 Disconnecting socket');
             newSocket.close();
         };
-    }, []);
+    }, [showNotification]);
 
     const value = {
         socket,
