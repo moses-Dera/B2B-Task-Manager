@@ -92,7 +92,18 @@ export default function ManagerDashboard({ onNavigate }) {
       }
     };
 
-    loadTeamData();
+    loadTeamData().then(() => {
+      // Check for taskId in URL for deep linking
+      const params = new URLSearchParams(window.location.search);
+      const taskId = params.get('taskId');
+      if (taskId) {
+        tasksAPI.getTask(taskId).then(response => {
+          if (response.success) {
+            setViewingTask(response.data);
+          }
+        }).catch(err => console.error('Failed to load linked task:', err));
+      }
+    });
   }, []);
 
   const handleTaskSubmit = async (e) => {
@@ -496,7 +507,15 @@ export default function ManagerDashboard({ onNavigate }) {
       {viewingTask && (
         <TaskDetailModal
           task={viewingTask}
-          onClose={() => setViewingTask(null)}
+          onClose={() => {
+            setViewingTask(null);
+            // Remove query param without refreshing
+            const url = new URL(window.location);
+            if (url.searchParams.get('taskId')) {
+              url.searchParams.delete('taskId');
+              window.history.pushState({}, '', url);
+            }
+          }}
           isManagerView={true}
         />
       )}

@@ -150,7 +150,10 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                           onClick={() => {
                             if (!notification.read) markAsRead(notifId);
                             if (notification.type === 'task' && notification.related_id && onNavigate) {
-                              onNavigate(`/employee?taskId=${notification.related_id}`);
+                              const targetPath = userRole === 'manager'
+                                ? `/manager?taskId=${notification.related_id}`
+                                : `/employee?taskId=${notification.related_id}`;
+                              onNavigate(targetPath);
                               setShowNotifications(false);
                             }
                           }}
@@ -181,7 +184,10 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                     <button
                       onClick={() => {
                         setShowNotifications(false);
-                        onNavigate && onNavigate('/employee/notifications');
+                        const notificationsPath = userRole === 'manager'
+                          ? '/manager/notifications'
+                          : '/employee/notifications';
+                        onNavigate && onNavigate(notificationsPath);
                         // Refresh after a short delay to allow page to load
                         setTimeout(loadNotifications, 1000);
                       }}
