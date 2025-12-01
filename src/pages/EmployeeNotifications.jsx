@@ -5,7 +5,7 @@ import Badge from '../components/ui/Badge';
 import { notificationsAPI } from '../utils/api';
 import { useSocket } from '../context/SocketContext';
 
-export default function EmployeeNotifications() {
+export default function EmployeeNotifications({ onNavigate }) {
   const { socket, isConnected } = useSocket();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,16 @@ export default function EmployeeNotifications() {
       );
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  const handleNotificationClick = (notification) => {
+    if (!notification.read) {
+      markAsRead(notification._id);
+    }
+
+    if (notification.type === 'task' && notification.related_id && onNavigate) {
+      onNavigate(`/employee?taskId=${notification.related_id}`);
     }
   };
 
@@ -80,6 +90,7 @@ export default function EmployeeNotifications() {
         title: data.title,
         message: data.message,
         type: data.type,
+        related_id: data.related_id,
         read: false,
         time: 'Just now',
         createdAt: data.timestamp || new Date().toISOString()
@@ -131,8 +142,8 @@ export default function EmployeeNotifications() {
                   key={notification._id}
                   className={`flex items-start space-x-3 p-3 rounded-lg border ${notification.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
                     }`}
-                  onClick={() => !notification.read && markAsRead(notification._id)}
-                  style={{ cursor: notification.read ? 'default' : 'pointer' }}
+                  onClick={() => handleNotificationClick(notification)}
+                  style={{ cursor: 'pointer' }}
                 >
                   {getIcon(notification.type)}
                   <div className="flex-1">

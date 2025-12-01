@@ -161,7 +161,18 @@ export default function EmployeeDashboard({ onNavigate }) {
       }
     };
 
-    loadTasks();
+    loadTasks().then(() => {
+      // Check for taskId in URL
+      const params = new URLSearchParams(window.location.search);
+      const taskId = params.get('taskId');
+      if (taskId) {
+        tasksAPI.getTask(taskId).then(response => {
+          if (response.success) {
+            setFocusTask(response.data);
+          }
+        }).catch(err => console.error('Failed to load linked task:', err));
+      }
+    });
   }, []);
 
   if (loading) {
@@ -647,6 +658,140 @@ export default function EmployeeDashboard({ onNavigate }) {
                 }}
               >
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Task Detail Modal */}
+      {focusTask && window.location.search.includes('taskId') && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{focusTask.title}</h2>
+                <div className="flex items-center gap-3 mt-2">
+                  <Badge variant={getStatusColor(focusTask.status)}>
+                    {focusTask.status.replace('-', ' ')}
+                  </Badge>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${getPriorityColor(focusTask.priority)}`}>
+                    {focusTask.priority} Priority
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setFocusTask(null);
+                  // Remove query param without refreshing
+                  const url = new URL(window.location);
+                  url.searchParams.delete('taskId');
+                  window.history.pushState({}, '', url);
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Description</h3>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                  {focusTask.description || 'No description provided.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Due Date</h3>
+                  <div className="flex items-center text-gray-900 dark:text-white">
+                    <Calendar className="w-5 h-5 mr-2 text-gray-400" />
+                    {focusTask.due_date ? new Date(focusTask.due_date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'No due date'}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Assigned By</h3>
+                  <div className="flex items-center text-gray-900 dark:text-white">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium mr-3">
+                      {focusTask.assigned_by?.name?.charAt(0) || 'M'}
+                    </div>
+                    {focusTask.assigned_by?.name || 'Manager'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Attachments Section in Detail View */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Attachments</h3>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files);
+                        if (files.length > 0) {
+                          try {
+                            for (const file of files) {
+                              await tasksAPI.uploadFile(focusTask._id, file);
+                            }
+                            success(`${files.length} file(s) uploaded successfully!`);
+                          } catch (err) {
+                            error('Failed to upload files: ' + err.message);
+                          }
+                        }
+                      }}
+                    />
+                    <Paperclip className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Upload Files</span>
+                  </label>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const filesResponse = await tasksAPI.getTaskFiles(focusTask._id);
+                        if (filesResponse.success && filesResponse.data.length > 0) {
+                          setTaskFiles(filesResponse.data);
+                          setViewingFiles(focusTask);
+                        } else {
+                          error('No files submitted yet');
+                        }
+                      } catch (err) {
+                        error('Failed to load files');
+                      }
+                    }}
+                  >
+                    <File className="w-4 h-4 mr-2" />
+                    View Submitted Files
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const startDate = new Date();
+                  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(focusTask.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(focusTask.description || '')}`;
+                  window.open(googleCalendarUrl, '_blank');
+                }}
+              >
+                <CalendarPlus className="w-4 h-4 mr-2" />
+                Add to Calendar
+              </Button>
+              <Button
+                onClick={() => {
+                  if (focusTask.status !== 'completed') {
+                    handleMarkComplete(focusTask._id);
+                  }
+                }}
+                disabled={focusTask.status === 'completed' || updating === focusTask._id}
+              >
+                {updating === focusTask._id ? 'Updating...' : focusTask.status === 'completed' ? 'Completed' : 'Mark as Complete'}
               </Button>
             </div>
           </div>

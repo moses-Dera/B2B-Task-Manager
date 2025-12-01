@@ -147,7 +147,13 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
                           key={notifId}
                           className={`p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${!notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                             }`}
-                          onClick={() => !notification.read && markAsRead(notifId)}
+                          onClick={() => {
+                            if (!notification.read) markAsRead(notifId);
+                            if (notification.type === 'task' && notification.related_id && onNavigate) {
+                              onNavigate(`/employee?taskId=${notification.related_id}`);
+                              setShowNotifications(false);
+                            }
+                          }}
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">

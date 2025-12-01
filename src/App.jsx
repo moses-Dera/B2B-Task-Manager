@@ -45,6 +45,7 @@ function App() {
 
   const handleNavigation = (path) => {
     setCurrentPath(path);
+    window.history.pushState({}, '', path);
   };
 
   const renderDashboard = () => {
@@ -68,7 +69,7 @@ function App() {
       case 'employee':
       default:
         if (currentPath === '/employee/chat') return <EmployeeChat />;
-        if (currentPath === '/employee/notifications') return <EmployeeNotifications />;
+        if (currentPath === '/employee/notifications') return <EmployeeNotifications onNavigate={handleNavigation} />;
         if (currentPath === '/employee/performance') return <EmployeePerformance />;
         return <EmployeeDashboard onNavigate={handleNavigation} theme={theme} />;
     }
