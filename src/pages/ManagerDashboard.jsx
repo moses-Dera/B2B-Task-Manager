@@ -9,6 +9,7 @@ import MeetingScheduler from '../components/ui/MeetingScheduler';
 import { teamAPI, tasksAPI, authAPI } from '../utils/api';
 import { useNotification } from '../hooks/useNotification';
 import TaskDetailModal from '../components/TaskDetailModal';
+import EmployeeTasksModal from '../components/EmployeeTasksModal';
 
 export default function ManagerDashboard({ onNavigate }) {
   const { success, error } = useNotification();
@@ -28,6 +29,7 @@ export default function ManagerDashboard({ onNavigate }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [viewingTask, setViewingTask] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     const loadTeamData = async () => {
@@ -325,7 +327,15 @@ export default function ManagerDashboard({ onNavigate }) {
         <CardContent>
           <div className="space-y-4">
             {employees.map((employee) => (
-              <div key={employee.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-gray-100 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer gap-3">
+              <div
+                key={employee.id}
+                onClick={(e) => {
+                  // Prevent opening if clicking buttons inside
+                  if (e.target.closest('button')) return;
+                  setSelectedEmployee(employee);
+                }}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-gray-100 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer gap-3 transition-colors"
+              >
                 <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
                   <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium text-sm">{employee.avatar}</span>
@@ -488,6 +498,13 @@ export default function ManagerDashboard({ onNavigate }) {
           task={viewingTask}
           onClose={() => setViewingTask(null)}
           isManagerView={true}
+        />
+      )}
+
+      {selectedEmployee && (
+        <EmployeeTasksModal
+          employee={selectedEmployee}
+          onClose={() => setSelectedEmployee(null)}
         />
       )}
     </div >
