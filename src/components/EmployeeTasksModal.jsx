@@ -4,10 +4,10 @@ import { tasksAPI } from '../utils/api';
 import Badge from './ui/Badge';
 import TaskDetailModal from './TaskDetailModal';
 
-export default function EmployeeTasksModal({ employee, onClose }) {
+export default function EmployeeTasksModal({ employee, onClose, initialFilter = 'all' }) {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all'); // all, pending, completed, overdue
+    const [filter, setFilter] = useState(initialFilter); // all, pending, completed, overdue
     const [search, setSearch] = useState('');
     const [selectedTask, setSelectedTask] = useState(null);
 
@@ -101,8 +101,8 @@ export default function EmployeeTasksModal({ employee, onClose }) {
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-3 py-2 text-sm font-medium rounded-lg capitalize transition-colors ${filter === f
-                                        ? 'bg-primary text-white'
-                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                                     }`}
                             >
                                 {f}

@@ -30,6 +30,7 @@ export default function ManagerDashboard({ onNavigate }) {
   const [submitting, setSubmitting] = useState(false);
   const [viewingTask, setViewingTask] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [tasksModalFilter, setTasksModalFilter] = useState('all');
 
   useEffect(() => {
     const loadTeamData = async () => {
@@ -357,37 +358,17 @@ export default function ManagerDashboard({ onNavigate }) {
                       {employee.tasks_completed}/{employee.tasks_assigned} tasks completed
                     </p>
                     <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                      <p>📞 {employee.phone}</p>
-                      <p>🏢 {employee.department}</p>
+                      <p>📞 {employee.phone || 'N/A'}</p>
+                      <p className="capitalize">🏢 {employee.role} {employee.department ? `• ${employee.department}` : ''}</p>
                     </div>
                     <button
-                      onClick={async () => {
-                        try {
-                          const tasksResponse = await tasksAPI.getTasks({ assigned_to: employee.id });
-                          if (tasksResponse.success) {
-                            const completedTasks = tasksResponse.data.filter(t => t.status === 'completed');
-                            if (completedTasks.length > 0) {
-                              // If multiple tasks, for now just show the most recent one or a list selector
-                              // Ideally we'd show a list modal, but for "View Submitted Tasks" let's show the latest one
-                              // or maybe we should show a list? 
-                              // The user request implies "view submitted task" (singular/plural ambiguous).
-                              // Let's pick the latest completed task for now to show the detail modal.
-                              // A better UX would be a list of completed tasks to pick from.
-
-                              // For now, let's open the most recent completed task
-                              const latestTask = completedTasks.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
-                              setViewingTask(latestTask);
-                            } else {
-                              error(`No completed tasks by ${employee.name}`);
-                            }
-                          }
-                        } catch (err) {
-                          error('Failed to load employee tasks');
-                        }
+                      onClick={() => {
+                        setTasksModalFilter('completed');
+                        setSelectedEmployee(employee);
                       }}
                       className="text-xs text-blue-600 hover:text-blue-800 mt-1"
                     >
-                      View Latest Submission
+                      View Submitted Tasks
                     </button>
                   </div>
                 </div>
@@ -523,7 +504,11 @@ export default function ManagerDashboard({ onNavigate }) {
       {selectedEmployee && (
         <EmployeeTasksModal
           employee={selectedEmployee}
-          onClose={() => setSelectedEmployee(null)}
+          initialFilter={tasksModalFilter}
+          onClose={() => {
+            setSelectedEmployee(null);
+            setTasksModalFilter('all');
+          }}
         />
       )}
     </div >
