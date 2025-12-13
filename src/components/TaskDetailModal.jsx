@@ -214,42 +214,41 @@ export default function TaskDetailModal({ task, onClose, onMarkComplete, isManag
                                             ></div>
                                         </div>
                                     )}
-                                </label>
                                 </div>
                             )}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-3">
-                <Button
-                    variant="outline"
-                    onClick={() => {
-                        const startDate = new Date();
-                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-                        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(task.description || '')}`;
-                        window.open(googleCalendarUrl, '_blank');
-                    }}
-                >
-                    <CalendarPlus className="w-4 h-4 mr-2" />
-                    Add to Calendar
-                </Button>
-
-                {!isManagerView && (
+                {/* Footer */}
+                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-3">
                     <Button
-                        onClick={() => onMarkComplete && onMarkComplete(task._id)}
-                        disabled={task.status === 'completed'}
+                        variant="outline"
+                        onClick={() => {
+                            const startDate = new Date();
+                            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(task.description || '')}`;
+                            window.open(googleCalendarUrl, '_blank');
+                        }}
                     >
-                        {task.status === 'completed' ? 'Completed' : 'Mark as Complete'}
+                        <CalendarPlus className="w-4 h-4 mr-2" />
+                        Add to Calendar
                     </Button>
-                )}
 
-                {isManagerView && (
-                    <Button onClick={onClose}>Close</Button>
-                )}
+                    {!isManagerView && (
+                        <Button
+                            onClick={() => onMarkComplete && onMarkComplete(task._id)}
+                            disabled={task.status === 'completed'}
+                        >
+                            {task.status === 'completed' ? 'Completed' : 'Mark as Complete'}
+                        </Button>
+                    )}
+
+                    {isManagerView && (
+                        <Button onClick={onClose}>Close</Button>
+                    )}
+                </div>
             </div>
-        </div>
         </div >
     );
 }
