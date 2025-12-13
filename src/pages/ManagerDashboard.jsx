@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MessageSquare, TrendingUp, Video, Users, Calendar, Printer } from 'lucide-react';
+import { Plus, MessageSquare, TrendingUp, Video, Users, Calendar, Printer, Download } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -135,6 +135,35 @@ export default function ManagerDashboard({ onNavigate }) {
       error('Failed to assign task: ' + err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (allTasks.length === 0) return;
+
+    const headers = ['Task Title', 'Assigned To', 'Status', 'Priority', 'Due Date', 'Created At'];
+    const csvContent = [
+      headers.join(','),
+      ...allTasks.map(task => [
+        `"${task.title.replace(/"/g, '""')}"`,
+        `"${task.assigned_to?.name || 'Unassigned'}"`,
+        task.status,
+        task.priority,
+        task.due_date ? new Date(task.due_date).toLocaleDateString() : '',
+        new Date(task.createdAt).toLocaleDateString()
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `tasks_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -408,15 +437,24 @@ export default function ManagerDashboard({ onNavigate }) {
       <Card className="print-visible">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>All Tasks</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-            className="print:hidden"
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Print Report
-          </Button>
+          <div className="flex space-x-2 print:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print Report
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -446,6 +484,24 @@ export default function ManagerDashboard({ onNavigate }) {
                 <option value="in_progress">In Progress</option>
                 <option value="completed">Completed</option>
               </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
+              />
             </div>
           </div>
 
@@ -484,7 +540,7 @@ export default function ManagerDashboard({ onNavigate }) {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`capitalize ${task.priority === 'high' ? 'text-red-600 font-bold' :
-                            task.priority === 'medium' ? 'text-amber-600' : 'text-green-600'
+                          task.priority === 'medium' ? 'text-amber-600' : 'text-green-600'
                           }`}>
                           {task.priority}
                         </span>
