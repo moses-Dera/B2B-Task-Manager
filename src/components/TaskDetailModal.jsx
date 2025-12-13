@@ -156,7 +156,9 @@ export default function TaskDetailModal({ task, onClose, onMarkComplete, isManag
                             ) : taskFiles.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {taskFiles.map((file, idx) => {
-                                        const fileUrl = `${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}/uploads/tasks/${file.filename}`;
+                                        const fileUrl = file.url && file.url.startsWith('http')
+                                            ? file.url
+                                            : `${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}/uploads/tasks/${file.filename}`;
                                         return (
                                             <div key={idx} className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                                 <File className="w-8 h-8 text-blue-500 mr-3" />
@@ -206,48 +208,48 @@ export default function TaskDetailModal({ task, onClose, onMarkComplete, isManag
                                     </label>
                                     {uploading && (
                                         <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
-                                            <div 
-                                                className="bg-primary h-1.5 rounded-full transition-all duration-300" 
+                                            <div
+                                                className="bg-primary h-1.5 rounded-full transition-all duration-300"
                                                 style={{ width: `${uploadProgress}%` }}
                                             ></div>
                                         </div>
                                     )}
-                                    </label>
+                                </label>
                                 </div>
                             )}
-                        </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Footer */}
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-3">
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end gap-3">
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        const startDate = new Date();
+                        const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+                        const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(task.description || '')}`;
+                        window.open(googleCalendarUrl, '_blank');
+                    }}
+                >
+                    <CalendarPlus className="w-4 h-4 mr-2" />
+                    Add to Calendar
+                </Button>
+
+                {!isManagerView && (
                     <Button
-                        variant="outline"
-                        onClick={() => {
-                            const startDate = new Date();
-                            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-                            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(task.title)}&dates=${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${endDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(task.description || '')}`;
-                            window.open(googleCalendarUrl, '_blank');
-                        }}
+                        onClick={() => onMarkComplete && onMarkComplete(task._id)}
+                        disabled={task.status === 'completed'}
                     >
-                        <CalendarPlus className="w-4 h-4 mr-2" />
-                        Add to Calendar
+                        {task.status === 'completed' ? 'Completed' : 'Mark as Complete'}
                     </Button>
+                )}
 
-                    {!isManagerView && (
-                        <Button
-                            onClick={() => onMarkComplete && onMarkComplete(task._id)}
-                            disabled={task.status === 'completed'}
-                        >
-                            {task.status === 'completed' ? 'Completed' : 'Mark as Complete'}
-                        </Button>
-                    )}
-
-                    {isManagerView && (
-                        <Button onClick={onClose}>Close</Button>
-                    )}
-                </div>
+                {isManagerView && (
+                    <Button onClick={onClose}>Close</Button>
+                )}
             </div>
         </div>
+        </div >
     );
 }

@@ -588,7 +588,9 @@ export default function EmployeeDashboard({ onNavigate }) {
                 {taskFiles.map((file, idx) => {
                   const isImage = file.mimeType?.startsWith('image/') ||
                     /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name);
-                  const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/tasks/${file.filename}`;
+                  const fileUrl = file.url && file.url.startsWith('http')
+                    ? file.url
+                    : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/tasks/${file.filename}`;
 
                   return (
                     <div
