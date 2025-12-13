@@ -525,20 +525,26 @@ export default function EmployeeDashboard({ onNavigate }) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {weeklyData.map((week, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{week.name}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full"
-                          style={{ width: `${Math.min(100, (week.value / 10) * 100)}%` }}
-                        ></div>
+                {weeklyData.length > 0 ? (
+                  weeklyData.map((week, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">{week.name}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full"
+                            style={{ width: `${Math.min(100, (week.value / 10) * 100)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{week.value}</span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">{week.value}</span>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    No activity recorded yet
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

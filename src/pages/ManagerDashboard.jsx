@@ -373,10 +373,15 @@ export default function ManagerDashboard({ onNavigate }) {
           </CardHeader>
           <CardContent>
             {performance?.total_tasks > 0 ? (
-              <>
+              <div className="relative">
+                {productivityData.every(d => d.value === 0) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-gray-800/80 z-10 backdrop-blur-sm rounded-lg">
+                    <p className="text-gray-500 dark:text-gray-400 font-medium">No completed tasks recently</p>
+                  </div>
+                )}
                 <SimpleLineChart data={productivityData} />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Tasks completed weekly (last 30 days)</p>
-              </>
+              </div>
             ) : (
               <div className="h-64 flex flex-col items-center justify-center text-center p-4">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
