@@ -20,6 +20,7 @@ import GlobalSettings from './pages/GlobalSettings';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import MagicLogin from './pages/MagicLogin';
 import LandingPage from './pages/LandingPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -111,6 +112,7 @@ function App() {
                   <Navigate to={`/${user.role}`} replace />
                 )
               } />
+              <Route path="/magic-login" element={<MagicLogin onLogin={login} />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 

@@ -156,6 +156,12 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify({ token, password }),
     }),
+
+  verifyMagicLink: (token) =>
+    apiRequest('/auth/verify-magic-link', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
 };
 
 // Tasks API
