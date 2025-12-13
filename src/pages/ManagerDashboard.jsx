@@ -32,6 +32,35 @@ export default function ManagerDashboard({ onNavigate }) {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [tasksModalFilter, setTasksModalFilter] = useState('all');
 
+  // Filter states
+  const [filterEmployee, setFilterEmployee] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [allTasks, setAllTasks] = useState([]);
+
+  // Fetch tasks when filters change
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const params = {};
+        if (filterEmployee) params.assigned_to = filterEmployee;
+        if (filterStatus !== 'all') params.status = filterStatus;
+        if (startDate) params.start_date = startDate;
+        if (endDate) params.end_date = endDate;
+
+        const response = await tasksAPI.getTasks(params);
+        if (response.success) {
+          setAllTasks(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      }
+    };
+
+    fetchTasks();
+  }, [filterEmployee, filterStatus, startDate, endDate]);
+
   useEffect(() => {
     const loadTeamData = async () => {
       try {
