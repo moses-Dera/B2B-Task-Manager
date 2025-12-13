@@ -592,6 +592,25 @@ export default function EmployeeDashboard({ onNavigate }) {
                     ? file.url
                     : `${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}/uploads/tasks/${file.filename}`;
 
+                  const handleDownload = async (e) => {
+                    e.preventDefault();
+                    try {
+                      const response = await fetch(fileUrl);
+                      const blob = await response.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = blobUrl;
+                      link.download = file.name || 'download';
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(blobUrl);
+                    } catch (error) {
+                      console.error('Download failed:', error);
+                      window.open(fileUrl, '_blank');
+                    }
+                  };
+
                   return (
                     <div
                       key={idx}
@@ -608,8 +627,7 @@ export default function EmployeeDashboard({ onNavigate }) {
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                             <a
                               href={fileUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              onClick={handleDownload}
                               className="opacity-0 group-hover:opacity-100 bg-white dark:bg-gray-800 p-3 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
                               title="Download"
                             >
@@ -632,8 +650,7 @@ export default function EmployeeDashboard({ onNavigate }) {
                           </p>
                           <a
                             href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            onClick={handleDownload}
                             className="text-xs text-primary hover:text-primary-dark flex items-center gap-1"
                           >
                             <Download className="w-3 h-3" />
