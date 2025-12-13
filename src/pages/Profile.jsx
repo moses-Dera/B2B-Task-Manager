@@ -57,7 +57,7 @@ export default function Profile({ user: initialUser }) {
     try {
       const response = await usersAPI.updateProfile(formData);
       if (response.success) {
-        setUser(response.user);
+        setUser(response.data);
         success('Profile updated successfully!');
       } else {
         error('Failed to update profile: ' + response.error);
@@ -89,8 +89,6 @@ export default function Profile({ user: initialUser }) {
       if (response.success) {
         setUser(response.data);
         success('Photo uploaded successfully!');
-        // Force reload user data to update header etc
-        window.location.reload();
       } else {
         error('Failed to upload photo: ' + (response.error || 'Unknown error'));
       }
