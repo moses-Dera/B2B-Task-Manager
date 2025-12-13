@@ -116,8 +116,7 @@ export default function EmployeeDashboard({ onNavigate }) {
           const todayTasks = allTasks.filter(task => {
             if (!task.due_date) return false;
             const dueDate = new Date(task.due_date);
-            dueDate.setHours(0, 0, 0, 0);
-            return dueDate.getTime() === today.getTime();
+            return dueDate.toDateString() === today.toDateString();
           });
 
           const weekTasks = allTasks.filter(task => {
