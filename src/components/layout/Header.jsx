@@ -2,7 +2,7 @@ import { Search, Bell, ChevronDown, Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { notificationsAPI } from '../../utils/api';
 
-export default function Header({ userRole = 'employee', userName = 'John Doe', onLogout, onNavigate, onMobileMenuToggle }) {
+export default function Header({ userRole = 'employee', userName = 'John Doe', userProfile, onLogout, onNavigate, onMobileMenuToggle }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -206,10 +206,20 @@ export default function Header({ userRole = 'employee', userName = 'John Doe', o
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white text-sm font-medium">
-                  {userName.split(' ').map(n => n[0]).join('')}
-                </span>
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                {userProfile ? (
+                  <img
+                    src={userProfile.startsWith('http')
+                      ? userProfile
+                      : `${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}${userProfile}`}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white text-sm font-medium">
+                    {userName.split(' ').map(n => n[0]).join('')}
+                  </span>
+                )}
               </div>
               <div className="text-left">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{userName}</div>

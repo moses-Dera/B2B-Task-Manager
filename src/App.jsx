@@ -122,6 +122,7 @@ function App() {
                   <Layout
                     userRole={user.role}
                     userName={user.name}
+                    userProfile={user.profilePicture}
                     currentPath={currentPath}
                     onNavigate={handleNavigation}
                     onLogout={logout}
