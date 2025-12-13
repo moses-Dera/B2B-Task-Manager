@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MessageSquare, TrendingUp, Video, Users, Calendar } from 'lucide-react';
+import { Plus, MessageSquare, TrendingUp, Video, Users, Calendar, Printer } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
@@ -403,6 +403,129 @@ export default function ManagerDashboard({ onNavigate }) {
           </div>
         </CardContent>
       </Card>
+
+      {/* All Tasks List & Filtering */}
+      <Card className="print-visible">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>All Tasks</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.print()}
+            className="print:hidden"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Print Report
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 print:hidden">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Employee</label>
+              <select
+                value={filterEmployee}
+                onChange={(e) => setFilterEmployee(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
+              >
+                <option value="">All Employees</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filter by Status</label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-600"
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Task Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th className="px-4 py-3">Task Title</th>
+                  <th className="px-4 py-3">Assigned To</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Priority</th>
+                  <th className="px-4 py-3">Due Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allTasks.length > 0 ? (
+                  allTasks.map((task) => (
+                    <tr key={task._id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{task.title}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-2 text-xs text-white">
+                            {task.assigned_to?.name ? task.assigned_to.name.charAt(0).toUpperCase() : '?'}
+                          </div>
+                          {task.assigned_to?.name || 'Unassigned'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={
+                          task.status === 'completed' ? 'success' :
+                            task.status === 'in_progress' ? 'warning' : 'secondary'
+                        }>
+                          {task.status.replace('_', ' ')}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`capitalize ${task.priority === 'high' ? 'text-red-600 font-bold' :
+                            task.priority === 'medium' ? 'text-amber-600' : 'text-green-600'
+                          }`}>
+                          {task.priority}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                      No tasks found matching filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .print-visible, .print-visible * {
+            visibility: visible;
+          }
+          .print-visible {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
 
       {/* Quick Task Assignment */}
       <Card id="task-assignment-form">
