@@ -43,9 +43,11 @@ const clearAuthToken = () => {
 const apiRequest = async (endpoint, options = {}, retries = 1) => {
   const token = getAuthToken();
 
+  const isFormData = options.body instanceof FormData;
+
   const config = {
     headers: {
-      'Content-Type': 'application/json',
+      ...(!isFormData && { 'Content-Type': 'application/json' }),
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
@@ -191,7 +193,6 @@ export const tasksAPI = {
 
     return apiRequest(`/tasks/${taskId}/files`, {
       method: 'POST',
-      headers: {}, // Remove Content-Type to let browser set it for FormData
       body: formData,
     });
   },
@@ -217,7 +218,6 @@ export const usersAPI = {
 
     return apiRequest('/users/profile/picture', {
       method: 'POST',
-      headers: {}, // Let browser set Content-Type
       body: formData,
     });
   },
@@ -340,14 +340,10 @@ export const chatAPI = {
       formData.append('files', file);
     });
 
-    const token = getAuthToken();
-    return fetch(`${API_BASE_URL.replace(/\/+$/, '')}/chat/upload-attachment`, {
+    return apiRequest('/chat/upload-attachment', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
       body: formData
-    }).then(res => res.json());
+    });
   },
 };
 
