@@ -115,7 +115,9 @@ export default function Profile({ user: initialUser }) {
               <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center overflow-hidden">
                 {user?.profilePicture ? (
                   <img
-                    src={`${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}${user.profilePicture}`}
+                    src={user.profilePicture.startsWith('http')
+                      ? user.profilePicture
+                      : `${import.meta.env.VITE_API_URL || 'https://task-manger-backend-z2yz.onrender.com/api'}${user.profilePicture}`}
                     alt={user.name}
                     className="w-full h-full object-cover"
                   />
@@ -131,10 +133,10 @@ export default function Profile({ user: initialUser }) {
                 </div>
               )}
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">{user?.name || 'User'}</h3>
-            <p className="text-gray-500 capitalize">{user?.role || 'Employee'}</p>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{user?.name || 'User'}</h3>
+            <p className="text-gray-500 dark:text-gray-400 capitalize">{user?.role || 'Employee'}</p>
             {user?.company && (
-              <p className="text-sm text-blue-600 mt-1">{user.company}</p>
+              <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">{user.company}</p>
             )}
             <input
               ref={fileInputRef}
@@ -163,41 +165,41 @@ export default function Profile({ user: initialUser }) {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone</label>
                   <input
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="+1 (555) 123-4567"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department</label>
                   <input
                     type="text"
                     value={formData.department}
                     onChange={(e) => handleInputChange('department', e.target.value)}
                     placeholder="Engineering"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
