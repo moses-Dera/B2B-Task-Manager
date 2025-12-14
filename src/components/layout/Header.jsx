@@ -1,7 +1,6 @@
 import { Search, Bell, ChevronDown, Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { Search, Bell, ChevronDown, Menu, X } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
+
 import { notificationsAPI } from '../../utils/api';
 import Avatar from '../ui/Avatar';
 
