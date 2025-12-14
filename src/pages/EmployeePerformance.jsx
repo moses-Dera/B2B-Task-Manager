@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Target, Award, Calendar } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
+import { useSocket } from '../context/SocketContext';
 import { CircularProgress } from '../components/charts/ProgressBar';
 import SimpleLineChart from '../components/charts/LineChart';
 import { tasksAPI, authAPI } from '../utils/api';
 
 export default function EmployeePerformance() {
+  const { socket } = useSocket();
   const [user, setUser] = useState(null);
-  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     completed: 0,
@@ -15,55 +16,57 @@ export default function EmployeePerformance() {
     onTimeRate: 0,
     score: 'N/A'
   });
+  const [weeklyData, setWeeklyData] = useState([]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Get current user
+  const loadData = async () => {
+    try {
+      // Get current user if not already loaded
+      if (!user) {
         const userResponse = await authAPI.getCurrentUser();
         if (userResponse.success) {
           setUser(userResponse.user);
         }
-
-        // Get user's tasks
-        const tasksResponse = await tasksAPI.getTasks();
-        if (tasksResponse.success) {
-          const userTasks = tasksResponse.data;
-          setTasks(userTasks);
-          
-          // Calculate stats
-          const completed = userTasks.filter(task => task.status === 'completed').length;
-          const total = userTasks.length;
-          const onTime = userTasks.filter(task => 
-            task.status === 'completed' && 
-            new Date(task.updatedAt) <= new Date(task.due_date)
-          ).length;
-          const onTimeRate = completed > 0 ? Math.round((onTime / completed) * 100) : 0;
-          const score = onTimeRate >= 90 ? 'A' : onTimeRate >= 80 ? 'B' : onTimeRate >= 70 ? 'C' : 'D';
-          
-          setStats({
-            completed,
-            total,
-            onTimeRate,
-            score
-          });
-        }
-      } catch (error) {
-        console.error('Failed to load performance data:', error);
-      } finally {
-        setLoading(false);
       }
-    };
 
+      // Get performance stats from API
+      const perfResponse = await tasksAPI.getPerformanceStats();
+      if (perfResponse.success) {
+        const perfData = perfResponse.data;
+        setStats({
+          completed: perfData.completed_tasks,
+          total: perfData.total_tasks,
+          onTimeRate: perfData.on_time_completion,
+          score: perfData.performance_score
+        });
+        setWeeklyData(perfData.weekly_performance || []);
+      }
+    } catch (error) {
+      console.error('Failed to load performance data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
 
-  const performanceData = [
-    { name: 'Week 1', value: Math.floor(stats.completed * 0.2) },
-    { name: 'Week 2', value: Math.floor(stats.completed * 0.3) },
-    { name: 'Week 3', value: Math.floor(stats.completed * 0.25) },
-    { name: 'Week 4', value: Math.floor(stats.completed * 0.25) },
-  ];
+  // Listen for task updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTaskUpdate = (data) => {
+      console.log('Task update received in Performance:', data);
+      // Refresh stats when a task is updated (e.g. completed)
+      loadData();
+    };
+
+    socket.on('task_updated', handleTaskUpdate);
+
+    return () => {
+      socket.off('task_updated', handleTaskUpdate);
+    };
+  }, [socket]);
 
   const statCards = [
     { label: 'Tasks Completed', value: stats.completed.toString(), icon: Target, color: 'text-green-600' },
@@ -123,7 +126,7 @@ export default function EmployeePerformance() {
             <CardTitle>Weekly Performance Trend</CardTitle>
           </CardHeader>
           <CardContent>
-            <SimpleLineChart data={performanceData} />
+            <SimpleLineChart data={weeklyData} />
             <p className="text-sm text-gray-500 mt-2 text-center">Tasks completed per week</p>
           </CardContent>
         </Card>

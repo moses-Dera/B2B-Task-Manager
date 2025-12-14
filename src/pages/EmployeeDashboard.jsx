@@ -6,8 +6,10 @@ import Badge from '../components/ui/Badge';
 import { CircularProgress } from '../components/charts/ProgressBar';
 import { tasksAPI, authAPI } from '../utils/api';
 import { useNotification } from '../hooks/useNotification';
+import { useSocket } from '../context/SocketContext';
 
 export default function EmployeeDashboard({ onNavigate }) {
+  const { socket } = useSocket();
   const { success, error } = useNotification();
   const [activeTab, setActiveTab] = useState('today');
   const [tasks, setTasks] = useState({ today: [], week: [], later: [] });
@@ -161,19 +163,82 @@ export default function EmployeeDashboard({ onNavigate }) {
       }
     };
 
-    loadTasks().then(() => {
-      // Check for taskId in URL
-      const params = new URLSearchParams(window.location.search);
-      const taskId = params.get('taskId');
-      if (taskId) {
-        tasksAPI.getTask(taskId).then(response => {
-          if (response.success) {
-            setFocusTask(response.data);
-          }
-        }).catch(err => console.error('Failed to load linked task:', err));
-      }
-    });
+    loadTasks();
   }, []);
+
+  // Listen for task updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTaskUpdate = (data) => {
+      console.log('Task update received in Dashboard:', data);
+
+      // Reload everything to keep counts and lists in sync
+      const loadTasks = async () => {
+        try {
+          const [tasksResponse, performanceResponse] = await Promise.all([
+            tasksAPI.getTasks(),
+            tasksAPI.getPerformanceStats()
+          ]);
+
+          if (performanceResponse.success) {
+            const perfData = performanceResponse.data;
+            setStats({
+              completed: perfData.completed_tasks,
+              streak: perfData.streak_days,
+              completionRate: perfData.completion_rate,
+              onTimeCompletion: perfData.on_time_completion,
+              performanceScore: perfData.performance_score
+            });
+            setWeeklyData(perfData.weekly_performance || []);
+          }
+
+          if (tasksResponse.success) {
+            const allTasks = tasksResponse.data;
+            // Re-categorize tasks (Using the same logic as initial load)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+
+            const todayTasks = allTasks.filter(task => {
+              if (!task.due_date) return false;
+              const dueDate = new Date(task.due_date);
+              return dueDate.toDateString() === today.toDateString();
+            });
+
+            const weekTasks = allTasks.filter(task => {
+              if (!task.due_date) return false;
+              const dueDate = new Date(task.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+              return dueDate >= tomorrow && dueDate <= nextWeek;
+            });
+
+            const laterTasks = allTasks.filter(task => {
+              if (!task.due_date) return true;
+              const dueDate = new Date(task.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+              return dueDate > nextWeek;
+            });
+
+            setTasks({ today: todayTasks, week: weekTasks, later: laterTasks });
+          }
+        } catch (error) {
+          console.error('Failed to reload tasks:', error);
+        }
+      };
+
+      loadTasks();
+    };
+
+    socket.on('task_updated', handleTaskUpdate);
+
+    return () => {
+      socket.off('task_updated', handleTaskUpdate);
+    };
+  }, [socket]);
 
   if (loading) {
     return (
