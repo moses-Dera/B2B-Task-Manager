@@ -266,7 +266,7 @@ export default function ManagerDashboard({ onNavigate }) {
                 const meetingData = {
                   title: 'Team Meeting',
                   description: `Meeting started by ${user?.name || 'Manager'}`,
-                  meeting_url: 'Google Calendar event created',
+                  meeting_url: calendarUrl,
                   started_at: now.toISOString()
                 };
 
