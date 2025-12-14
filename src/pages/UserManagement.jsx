@@ -19,6 +19,7 @@ export default function UserManagement() {
   const [editLoading, setEditLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [viewingUser, setViewingUser] = useState(null);
+  const [invitedUser, setInvitedUser] = useState(null);
 
   const loadUsers = async () => {
     try {
