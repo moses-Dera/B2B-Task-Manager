@@ -17,6 +17,7 @@ export default function UserManagement() {
   const [editForm, setEditForm] = useState({});
   const [editLoading, setEditLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [viewingUser, setViewingUser] = useState(null);
 
   const loadUsers = async () => {
     try {
@@ -147,6 +148,11 @@ export default function UserManagement() {
     );
   }
 
+  const handleViewUser = (user) => {
+    setViewingUser(user);
+  };
+
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-col lg:justify-between lg:items-center gap-4">
@@ -240,7 +246,11 @@ export default function UserManagement() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr
+                    key={user.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleViewUser(user)}
+                  >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
@@ -284,14 +294,20 @@ export default function UserManagement() {
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => handleEditUser(user)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditUser(user);
+                          }}
                           className="p-2 text-gray-400 hover:text-blue-600 transition"
                           title="Edit user"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteUser(user.id);
+                          }}
                           className="p-2 text-gray-400 hover:text-red-600 transition"
                           title={deleteConfirm === user.id ? "Click again to confirm delete" : "Delete user"}
                         >
@@ -390,6 +406,107 @@ export default function UserManagement() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* View User Modal */}
+      {viewingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setViewingUser(null)}>
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full overflow-hidden shadow-xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="relative">
+              <div className="h-24 bg-gradient-to-r from-blue-500 to-purple-600"></div>
+              <div className="absolute -bottom-12 left-6">
+                <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 bg-white dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {viewingUser.profilePicture ? (
+                    <img src={viewingUser.profilePicture} alt={viewingUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-gray-400">
+                      {viewingUser.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingUser(null)}
+                className="absolute top-4 right-4 text-white hover:text-gray-200 bg-black/20 hover:bg-black/40 rounded-full p-1"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="pt-16 pb-6 px-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{viewingUser.name}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-gray-500 dark:text-gray-400">{viewingUser.email}</p>
+                  <Badge variant={getRoleBadgeVariant(viewingUser.role)} className="ml-2">
+                    {viewingUser.role}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Contact info</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{viewingUser.phone || 'Not provided'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Department</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{viewingUser.department || 'General'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Performance</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between items-end mb-1">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Completion Rate</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{viewingUser.completion_rate || 0}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div className="bg-primary h-2 rounded-full" style={{ width: `${viewingUser.completion_rate || 0}%` }}></div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Score</p>
+                        <p className="text-xl font-bold text-primary">{viewingUser.performance_score || 'N/A'}</p>
+                      </div>
+                      <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Tasks</p>
+                        <p className="text-xl font-bold text-gray-900 dark:text-white">{viewingUser.tasks_completed || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-gray-700/30 px-6 py-4 flex justify-end">
+              <Button onClick={() => setViewingUser(null)}>Close</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
