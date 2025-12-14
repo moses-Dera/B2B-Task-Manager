@@ -561,7 +561,7 @@ export default function ManagerChat() {
                       if (e.target.value === '') handleSearchMessages();
                     }}
                     onKeyPress={(e) => e.key === 'Enter' && handleSearchMessages()}
-                    className="pl-9 pr-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-48"
+                    className="pl-9 pr-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-32 sm:w-48"
                   />
                 </div>
                 <span className="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
@@ -588,7 +588,7 @@ export default function ManagerChat() {
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+            <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-4 min-h-0">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                   <div className="text-center">
