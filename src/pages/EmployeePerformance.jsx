@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Target, Award, Calendar } from 'lucide-react';
+import { TrendingUp, Target, Award, Calendar, Star } from 'lucide-react';
+import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import { useSocket } from '../context/SocketContext';
 import { CircularProgress } from '../components/charts/ProgressBar';
@@ -16,6 +17,7 @@ export default function EmployeePerformance() {
     onTimeRate: 0,
     score: 'N/A'
   });
+  const [achievements, setAchievements] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
 
   const loadData = async () => {
@@ -39,6 +41,7 @@ export default function EmployeePerformance() {
           score: perfData.performance_score
         });
         setWeeklyData(perfData.weekly_performance || []);
+        setAchievements(perfData.achievements || []);
       }
     } catch (error) {
       console.error('Failed to load performance data:', error);
@@ -137,28 +140,60 @@ export default function EmployeePerformance() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-                <Award className="w-6 h-6 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-900">Perfect Week</p>
-                  <p className="text-sm text-green-700">Completed all tasks on time</p>
-                </div>
+              <div className={`space-y-4 ${achievements.length === 0 ? 'text-center py-6' : ''}`}>
+                {achievements.length > 0 ? (
+                  achievements.map((achievement) => {
+                    let Icon = Award;
+                    if (achievement.icon === 'TrendingUp') Icon = TrendingUp;
+                    if (achievement.icon === 'Target') Icon = Target;
+                    if (achievement.icon === 'Star') Icon = Star;
+
+                    const bgColors = {
+                      green: 'bg-green-50',
+                      blue: 'bg-blue-50',
+                      purple: 'bg-purple-50',
+                      yellow: 'bg-yellow-50',
+                      gray: 'bg-gray-50'
+                    };
+
+                    const textColors = {
+                      green: 'text-green-900',
+                      blue: 'text-blue-900',
+                      purple: 'text-purple-900',
+                      yellow: 'text-yellow-900',
+                      gray: 'text-gray-900'
+                    };
+
+                    const iconColors = {
+                      green: 'text-green-600',
+                      blue: 'text-blue-600',
+                      purple: 'text-purple-600',
+                      yellow: 'text-yellow-600',
+                      gray: 'text-gray-600'
+                    };
+
+                    const descColors = {
+                      green: 'text-green-700',
+                      blue: 'text-blue-700',
+                      purple: 'text-purple-700',
+                      yellow: 'text-yellow-700',
+                      gray: 'text-gray-700'
+                    };
+
+                    return (
+                      <div key={achievement.id} className={`flex items-center space-x-3 p-3 rounded-lg ${bgColors[achievement.color] || 'bg-gray-50'}`}>
+                        <Icon className={`w-6 h-6 ${iconColors[achievement.color] || 'text-gray-600'}`} />
+                        <div>
+                          <p className={`font-medium ${textColors[achievement.color] || 'text-gray-900'}`}>{achievement.title}</p>
+                          <p className={`text-sm ${descColors[achievement.color] || 'text-gray-700'}`}>{achievement.description}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-500">Complete tasks to earn achievements!</p>
+                )}
               </div>
-              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-                <div>
-                  <p className="font-medium text-blue-900">Productivity Boost</p>
-                  <p className="text-sm text-blue-700">25% increase in task completion</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
-                <Target className="w-6 h-6 text-purple-600" />
-                <div>
-                  <p className="font-medium text-purple-900">Goal Achieved</p>
-                  <p className="text-sm text-purple-700">Reached monthly target early</p>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
