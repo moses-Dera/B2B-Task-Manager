@@ -5,6 +5,7 @@ import Avatar from './Avatar';
 import Badge from './Badge';
 
 export default function Leaderboard({ employees, onEmployeeClick }) {
+    console.log('Leaderboard component rendering. Employees:', employees);
     const [filter, setFilter] = useState('score'); // 'score' or 'streak'
 
     // Sort employees based on filter
@@ -54,8 +55,8 @@ export default function Leaderboard({ employees, onEmployeeClick }) {
                         <button
                             onClick={() => setFilter('score')}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${filter === 'score'
-                                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
                             Most Tasks
@@ -63,8 +64,8 @@ export default function Leaderboard({ employees, onEmployeeClick }) {
                         <button
                             onClick={() => setFilter('streak')}
                             className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${filter === 'streak'
-                                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
                             Top Streaks
