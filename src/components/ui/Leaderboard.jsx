@@ -148,7 +148,7 @@ export default function Leaderboard({ employees, onEmployeeClick }) {
                         </div>
                     ))}
 
-                    {employees.length === 0 && (
+                    {sortedEmployees.length === 0 && (
                         <div className="text-center py-8 text-gray-400">
                             <Trophy className="w-12 h-12 mx-auto mb-2 opacity-50" />
                             <p>No performance data yet</p>
