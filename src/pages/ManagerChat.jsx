@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Paperclip, File, Download, Image as ImageIcon } from 'lucide-react';
+import { Send, MessageSquare, Users, Search, Smile, MoreVertical, Edit2, Trash2, Pin, Reply, X, PinOff, Paperclip, File, Download, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import Card, { CardHeader, CardContent, CardTitle } from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
@@ -29,6 +29,7 @@ export default function ManagerChat() {
   const [pinnedMessages, setPinnedMessages] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [showMobileChat, setShowMobileChat] = useState(false); // Mobile state
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -456,7 +457,7 @@ export default function ManagerChat() {
 
       <div className="flex gap-4 h-[calc(100vh-200px)]">
         {/* Sidebar - User List */}
-        <Card className="w-80 flex flex-col">
+        <Card className={`w-full md:w-80 flex flex-col ${showMobileChat ? 'hidden md:flex' : 'flex'}`}>
           <CardHeader className="border-b border-gray-200 dark:border-gray-700">
             <CardTitle className="flex items-center text-base">
               <Users className="w-5 h-5 mr-2" />
@@ -482,7 +483,7 @@ export default function ManagerChat() {
             <div className="overflow-y-auto h-full">
               {/* Group Chat Option */}
               <button
-                onClick={() => setSelectedUser(null)}
+                onClick={() => { setSelectedUser(null); setShowMobileChat(true); }}
                 className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${!selectedUser ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                   }`}
               >
@@ -504,7 +505,7 @@ export default function ManagerChat() {
               {filteredTeamMembers.filter(member => member != null).map((member) => (
                 <button
                   key={member._id}
-                  onClick={() => setSelectedUser(member)}
+                  onClick={() => { setSelectedUser(member); setShowMobileChat(true); }}
                   className={`w-full px-4 py-3 flex items-center space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700 ${selectedUser?._id === member._id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                 >
@@ -534,10 +535,16 @@ export default function ManagerChat() {
         </Card>
 
         {/* Chat Area */}
-        <Card className="flex-1 flex flex-col overflow-hidden">
+        <Card className={`flex-1 flex flex-col overflow-hidden ${!showMobileChat ? 'hidden md:flex' : 'flex'}`}>
           <CardHeader className="border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 bg-white dark:bg-gray-800">
             <CardTitle className="flex items-center justify-between">
               <div className="flex items-center">
+                <button
+                  onClick={() => setShowMobileChat(false)}
+                  className="md:hidden mr-2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
                 <MessageSquare className="w-5 h-5 mr-2" />
                 {getChatTitle()}
               </div>
