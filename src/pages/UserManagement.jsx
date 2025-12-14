@@ -229,28 +229,22 @@ export default function UserManagement() {
     }
   };
 
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-              <p className="text-sm text-gray-600">Total Users</p>
-            </CardContent >
-          </Card >
-          <Card>
-            <CardContent className="p-6 text-center">
               <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="text-2xl font-bold text-gray-900">
                 {users.filter(u => u.role === 'admin').length}
               </p>
               <p className="text-sm text-gray-600">Administrators</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6 text-center">
-              <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-gray-900">
-                {users.filter(u => u.role === 'manager').length}
-              </p>
-              <p className="text-sm text-gray-600">Managers</p>
-            </CardContent>
-          </Card>
+            </CardContent >
+          </Card >
+    <Card>
+      <CardContent className="p-6 text-center">
+        <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+        <p className="text-2xl font-bold text-gray-900">
+          {users.filter(u => u.role === 'manager').length}
+        </p>
+        <p className="text-sm text-gray-600">Managers</p>
+      </CardContent>
+    </Card>
         </div >
 
     <Card>
