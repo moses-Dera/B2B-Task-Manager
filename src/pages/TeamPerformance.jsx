@@ -34,12 +34,7 @@ export default function TeamPerformance() {
     loadTeamPerformance();
   }, []);
 
-  const performanceData = [
-    { name: 'Week 1', value: Math.floor((performance?.completed_tasks || 0) * 0.2) },
-    { name: 'Week 2', value: Math.floor((performance?.completed_tasks || 0) * 0.3) },
-    { name: 'Week 3', value: Math.floor((performance?.completed_tasks || 0) * 0.25) },
-    { name: 'Week 4', value: Math.floor((performance?.completed_tasks || 0) * 0.25) },
-  ];
+  const performanceData = performance?.weekly_performance || [];
 
   const stats = [
     { label: 'Total Tasks', value: performance?.total_tasks?.toString() || '0', icon: Target, color: 'text-blue-600' },
@@ -101,7 +96,7 @@ export default function TeamPerformance() {
             {performance?.total_tasks > 0 ? (
               <>
                 <SimpleLineChart data={performanceData} />
-                <p className="text-sm text-gray-500 mt-2 text-center">Tasks completed per week</p>
+                <p className="text-sm text-gray-500 mt-2 text-center">Tasks completed daily (last 14 days)</p>
               </>
             ) : (
               <div className="h-64 flex flex-col items-center justify-center text-center p-4">
@@ -140,8 +135,8 @@ export default function TeamPerformance() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${employee.performance_score === 'A' ? 'bg-green-100 text-green-800' :
-                        employee.performance_score === 'B' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
+                      employee.performance_score === 'B' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
                       }`}>
                       {employee.performance_score}
                     </span>

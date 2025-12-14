@@ -5,7 +5,6 @@ import Button from '../components/ui/Button';
 import { chatAPI, authAPI } from '../utils/api';
 import { useNotification } from '../hooks/useNotification';
 import { useSocket } from '../context/SocketContext';
-import { useSocket } from '../context/SocketContext';
 
 // Common emoji reactions
 const EMOJI_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🎉', '🔥', '👏'];

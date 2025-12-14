@@ -380,7 +380,7 @@ export default function ManagerDashboard({ onNavigate }) {
                   </div>
                 )}
                 <SimpleLineChart data={productivityData} />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Tasks completed weekly (last 30 days)</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">Tasks completed daily (last 14 days)</p>
               </div>
             ) : (
               <div className="h-64 flex flex-col items-center justify-center text-center p-4">
