@@ -9,19 +9,28 @@ export default function Leaderboard({ employees, onEmployeeClick }) {
     const [filter, setFilter] = useState('score'); // 'score' or 'streak'
 
     // Sort employees based on filter
-    const sortedEmployees = [...employees].sort((a, b) => {
+    const sortedEmployees = [...(employees || [])].sort((a, b) => {
+        const scoreA = a.performance_score || 'C';
+        const scoreB = b.performance_score || 'C';
+        const completedA = a.tasks_completed || 0;
+        const completedB = b.tasks_completed || 0;
+        const streakA = a.currentStreak || 0;
+        const streakB = b.currentStreak || 0;
+        const nameA = a.name || 'Unknown';
+        const nameB = b.name || 'Unknown';
+
         if (filter === 'score') {
             // Sort by completion count DESC, then name
-            if (b.tasks_completed !== a.tasks_completed) {
-                return b.tasks_completed - a.tasks_completed;
+            if (completedB !== completedA) {
+                return completedB - completedA;
             }
-            return a.name.localeCompare(b.name);
+            return nameA.localeCompare(nameB);
         } else {
             // Sort by streak DESC, then completion count
-            if (b.currentStreak !== a.currentStreak) {
-                return b.currentStreak - a.currentStreak;
+            if (streakB !== streakA) {
+                return streakB - streakA;
             }
-            return b.tasks_completed - a.tasks_completed;
+            return completedB - completedA;
         }
     });
 
