@@ -121,8 +121,16 @@ export default function TaskDetailModal({ task, onClose, onMarkComplete, isManag
                                 {isManagerView ? 'Assigned To' : 'Assigned By'}
                             </h3>
                             <div className="flex items-center text-gray-900 dark:text-white">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium mr-3">
-                                    {(isManagerView ? task.assigned_to?.name : task.assigned_by?.name)?.charAt(0) || 'U'}
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium mr-3 overflow-hidden">
+                                    {(isManagerView ? task.assigned_to?.profilePicture : task.assigned_by?.profilePicture) ? (
+                                        <img
+                                            src={(isManagerView ? task.assigned_to?.profilePicture : task.assigned_by?.profilePicture)}
+                                            alt={(isManagerView ? task.assigned_to?.name : task.assigned_by?.name)}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        (isManagerView ? task.assigned_to?.name : task.assigned_by?.name)?.charAt(0) || 'U'
+                                    )}
                                 </div>
                                 {isManagerView ? (task.assigned_to?.name || 'Unknown') : (task.assigned_by?.name || 'Manager')}
                             </div>

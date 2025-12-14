@@ -253,10 +253,14 @@ export default function UserManagement() {
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-white font-medium">
-                            {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </span>
+                        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+                          {user.profilePicture ? (
+                            <img src={user.profilePicture} alt={user.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white font-medium">
+                              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </span>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{user.name}</p>

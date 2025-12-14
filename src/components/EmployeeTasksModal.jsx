@@ -67,8 +67,12 @@ export default function EmployeeTasksModal({ employee, onClose, initialFilter = 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white text-xl font-bold">
-                            {employee.name.charAt(0)}
+                        <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden">
+                            {employee.profilePicture ? (
+                                <img src={employee.profilePicture} alt={employee.name} className="w-full h-full object-cover" />
+                            ) : (
+                                employee.name.charAt(0)
+                            )}
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{employee.name}</h2>

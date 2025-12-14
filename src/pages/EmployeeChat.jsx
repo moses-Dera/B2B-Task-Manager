@@ -524,9 +524,8 @@ export default function EmployeeChat() {
                       </div>
                     )}
                     {isUserOnline(member._id) && (
-                      { isUserOnline(member._id) && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-                      )}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
+                    )}
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900 dark:text-white text-sm">{member.name}</p>
@@ -799,116 +798,117 @@ export default function EmployeeChat() {
                           )}
                         </div>
                       </div>
-                      );
+                    </div>
+                  );
                 })
               )}
-                      {isTyping && typingUser && (
-                        <div className="flex justify-start">
-                          <div className="max-w-xs px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
-                            <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                              {typingUser} is typing...
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
+              {isTyping && typingUser && (
+                <div className="flex justify-start">
+                  <div className="max-w-xs px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                      {typingUser} is typing...
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
             {
-                    replyingTo && (
-                      <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Reply className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Replying to {replyingTo.sender_id.name}: {replyingTo.message.substring(0, 50)}...
-                          </span>
-                        </div>
-                        <button onClick={() => setReplyingTo(null)} className="text-gray-500 hover:text-gray-700">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )
-                  }
-
-                  {
-                    editingMessage && (
-                      <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Edit2 className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-blue-600 dark:text-blue-400">
-                            Editing message
-                          </span>
-                        </div>
-                        <button onClick={() => { setEditingMessage(null); setNewMessage(''); }} className="text-blue-600 hover:text-blue-700">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )
-                  }
-
-                  {/* Selected Files Indicator */ }
-                  {
-                    selectedFiles.length > 0 && (
-                      <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
-                        {selectedFiles.map((file, idx) => (
-                          <div key={idx} className="flex items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 shadow-sm">
-                            <Paperclip className="w-3 h-3 text-gray-400 mr-2" />
-                            <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[150px] truncate">{file.name}</span>
-                            <button
-                              onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
-                              className="ml-2 text-gray-400 hover:text-red-500"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )
-                  }
-
-                  {/* Message Input */ }
-                  <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <textarea
-                          value={newMessage}
-                          onChange={handleTyping}
-                          onKeyPress={handleKeyPress}
-                          placeholder={`Message ${selectedUser ? selectedUser.name : 'everyone'}...`}
-                          rows={1}
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none overflow-y-auto min-h-[42px] max-h-[120px]"
-                        />
-                      </div>
-                      <input
-                        type="file"
-                        multiple
-                        className="hidden"
-                        id="employee-file-input"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files);
-                          if (files.length > 0) {
-                            setSelectedFiles(prev => [...prev, ...files]);
-                          }
-                        }}
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => document.getElementById('employee-file-input')?.click()}
-                        title="Attach file"
-                        className={`flex-shrink-0 ${selectedFiles.length > 0 ? 'text-primary border-primary bg-primary/10' : ''}`}
-                      >
-                        <Paperclip className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={sendMessage}
-                        disabled={!newMessage.trim() && selectedFiles.length === 0}
-                        className="flex-shrink-0"
-                      >
-                        <Send className="w-4 h-4" />
-                      </Button>
-                    </div>
+              replyingTo && (
+                <div className="px-4 py-2 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Reply className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Replying to {replyingTo.sender_id.name}: {replyingTo.message.substring(0, 50)}...
+                    </span>
                   </div>
+                  <button onClick={() => setReplyingTo(null)} className="text-gray-500 hover:text-gray-700">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )
+            }
+
+            {
+              editingMessage && (
+                <div className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Edit2 className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm text-blue-600 dark:text-blue-400">
+                      Editing message
+                    </span>
+                  </div>
+                  <button onClick={() => { setEditingMessage(null); setNewMessage(''); }} className="text-blue-600 hover:text-blue-700">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )
+            }
+
+            {/* Selected Files Indicator */}
+            {
+              selectedFiles.length > 0 && (
+                <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                  {selectedFiles.map((file, idx) => (
+                    <div key={idx} className="flex items-center bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 shadow-sm">
+                      <Paperclip className="w-3 h-3 text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[150px] truncate">{file.name}</span>
+                      <button
+                        onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                        className="ml-2 text-gray-400 hover:text-red-500"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )
+            }
+
+            {/* Message Input */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <textarea
+                    value={newMessage}
+                    onChange={handleTyping}
+                    onKeyPress={handleKeyPress}
+                    placeholder={`Message ${selectedUser ? selectedUser.name : 'everyone'}...`}
+                    rows={1}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none overflow-y-auto min-h-[42px] max-h-[120px]"
+                  />
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  id="employee-file-input"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                      setSelectedFiles(prev => [...prev, ...files]);
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById('employee-file-input')?.click()}
+                  title="Attach file"
+                  className={`flex-shrink-0 ${selectedFiles.length > 0 ? 'text-primary border-primary bg-primary/10' : ''}`}
+                >
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+                <Button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim() && selectedFiles.length === 0}
+                  className="flex-shrink-0"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
