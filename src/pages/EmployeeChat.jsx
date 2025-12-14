@@ -264,29 +264,18 @@ export default function EmployeeChat() {
           }
         }
 
-        // Use Socket.io for real-time messaging if connected, fallback to HTTP API
-        if (socket && isConnected) {
-          const messageData = {
-            message: newMessage || '📎 Attachment',
-            ...(selectedUser && { recipient_id: selectedUser._id }),
-            ...(replyingTo && { replyTo: replyingTo._id }),
-            ...(attachments.length > 0 && { attachments })
-          };
+        // Always use HTTP API for reliable message sending
+        const messageData = {
+          message: newMessage || '📎 Attachment',
+          ...(selectedUser && { recipient_id: selectedUser._id }),
+          ...(replyingTo && { replyTo: replyingTo._id }),
+          ...(attachments.length > 0 && { attachments })
+        };
 
-          socket.emit('send_message', messageData);
-        } else {
-          // Fallback to HTTP API if Socket.io not available
-          const messageData = {
-            message: newMessage || '📎 Attachment',
-            ...(selectedUser && { recipient_id: selectedUser._id }),
-            ...(replyingTo && { replyTo: replyingTo._id }),
-            ...(attachments.length > 0 && { attachments })
-          };
-
-          const response = await chatAPI.sendMessage(messageData);
-          if (response.success) {
-            setMessages(prev => [...prev, response.data]);
-          }
+        const response = await chatAPI.sendMessage(messageData);
+        if (response.success) {
+          // Don't add to messages here - let Socket.io handle it for real-time updates
+          console.log('Message sent successfully');
         }
 
         setNewMessage('');
