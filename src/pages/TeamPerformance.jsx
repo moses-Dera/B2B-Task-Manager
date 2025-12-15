@@ -160,7 +160,7 @@ export default function TeamPerformance() {
               <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="font-medium text-green-900">High Performers</p>
               <p className="text-2xl font-bold text-green-600">
-                {employees.filter(emp => emp.performance_score === 'A').length}
+                {employees.filter(emp => ['A', 'A+'].includes(emp.performance_score)).length}
               </p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -174,7 +174,7 @@ export default function TeamPerformance() {
               <Calendar className="w-8 h-8 text-orange-600 mx-auto mb-2" />
               <p className="font-medium text-orange-900">Need Support</p>
               <p className="text-2xl font-bold text-orange-600">
-                {employees.filter(emp => !['A', 'B'].includes(emp.performance_score)).length}
+                {employees.filter(emp => !['A', 'A+', 'B', 'N/A'].includes(emp.performance_score)).length}
               </p>
             </div>
           </div>

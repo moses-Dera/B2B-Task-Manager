@@ -336,7 +336,7 @@ export default function LandingPage({ onGetStarted, isDark, setIsDark }) {
             <a href="#" className="hover:text-primary transition-colors">Contact</a>
           </div>
           <div className="mt-4 md:mt-0 text-sm text-gray-500 dark:text-gray-400">
-            © 2024 TaskFlow Inc.
+            © 2025 TaskFlow Inc.
           </div>
         </div>
       </footer>
