@@ -175,11 +175,12 @@ export default function ManagerDashboard({ onNavigate }) {
   const handleExportCSV = () => {
     if (allTasks.length === 0) return;
 
-    const headers = ['Task Title', 'Assigned To', 'Status', 'Priority', 'Due Date', 'Created At'];
+    const headers = ['Task Title', 'Description', 'Assigned To', 'Status', 'Priority', 'Due Date', 'Created At'];
     const csvContent = [
       headers.join(','),
       ...allTasks.map(task => [
         `"${task.title.replace(/"/g, '""')}"`,
+        `"${(task.description || '').replace(/"/g, '""')}"`,
         `"${task.assigned_to?.name || 'Unassigned'}"`,
         task.status,
         task.priority,
