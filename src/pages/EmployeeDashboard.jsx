@@ -118,7 +118,8 @@ export default function EmployeeDashboard({ onNavigate }) {
           const todayTasks = allTasks.filter(task => {
             if (!task.due_date) return false;
             const dueDate = new Date(task.due_date);
-            return dueDate.toDateString() === today.toDateString();
+            dueDate.setHours(0, 0, 0, 0);
+            return dueDate <= today;
           });
 
           const weekTasks = allTasks.filter(task => {
@@ -206,7 +207,8 @@ export default function EmployeeDashboard({ onNavigate }) {
             const todayTasks = allTasks.filter(task => {
               if (!task.due_date) return false;
               const dueDate = new Date(task.due_date);
-              return dueDate.toDateString() === today.toDateString();
+              dueDate.setHours(0, 0, 0, 0);
+              return dueDate <= today;
             });
 
             const weekTasks = allTasks.filter(task => {
